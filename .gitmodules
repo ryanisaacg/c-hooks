@@ -1,0 +1,3 @@
+[submodule "arcade-physics"]
+	path = arcade-physics
+	url = https://github.com/ryanisaacg/arcade-physics

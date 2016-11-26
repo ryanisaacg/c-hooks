@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 2.4.0)
+project (arcade-physics)
+set(CMAKE_BUILD_TYPE Debug)
+
+add_subdirectory(arcade-physics)
+
+include_directories(include)
+include_directories(arcade-physics/include)
+file(GLOB SOURCES src/*.c)
+
+add_executable(hooks ${SOURCES})
+set_property(TARGET hooks PROPERTY C_STANDARD 99)
+set_target_properties(hooks PROPERTIES LINKER_LANGUAGE C)
+target_link_libraries(hooks m)
+target_link_libraries(hooks arcade-physics)
