@@ -1,11 +1,11 @@
+#include "arcade.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-SDL_Texture* load_texture(SDL_Renderer *rend, char *path)
-{
+SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	//The final texture
 	SDL_Texture* newTexture = NULL;
 
@@ -25,7 +25,16 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path)
 	return newTexture;
 }
 
+void update(ArcadeObject *obj) {
+
+}
+
+void collide(ArcadeObject *a, ArcadeObject *b) {
+
+}
+
 int main() {
+	// *** INITIALIZATION ***
 	//Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -48,7 +57,14 @@ int main() {
 		printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
 		exit(-1);
 	}
+	//Load the player texture
+	SDL_Texture *texture = load_texture(rend, "../img/player.png");
+	//Create the simulation world
+	World world = world_new(640, 480, 96);
+	world_add(&world, (ArcadeObject){ shape_rect(rect_new(0.f, 0.f, 32.f, 32.f)), vec2_new(0.f, 0.f), 
+			vec2_new(0.f, 1.f), texture });
 	SDL_Event event;
+	Uint32 previous = SDL_GetTicks();
 	while(true) {
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
@@ -56,8 +72,17 @@ int main() {
 					goto cleanup;
 			}
 		}
+		world_update(world, SDL_GetTicks() - previous, &update, &collide);
 		SDL_RenderClear(rend);
+		for(size_t i = 0; i < qt_len(world.entities); i++) {
+			ArcadeObject *obj = world_get(world, i);
+			Rect bounds = shape_bounding_box(obj->bounds);
+			SDL_Rect rect = {bounds.x, bounds.y, bounds.width, bounds.height};
+			SDL_RenderCopy(rend, obj->data, NULL, &rect);
+		}
 		SDL_RenderPresent(rend);
+		SDL_Delay(10);
+		previous = SDL_GetTicks();
 	}
 	cleanup:
 		//Initialize renderer color
