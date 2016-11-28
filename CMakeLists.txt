@@ -6,7 +6,7 @@ cmake_policy(SET CMP0015 NEW)
 
 add_subdirectory(arcade-physics)
 
-include_directories(include arcade-physics/include $ENV{SDL2_INCLUDE})
+include_directories(include arcade-physics/include arcade-physics/data-structures/include $ENV{SDL2_INCLUDE})
 link_directories($ENV{SDL2_LIB})
 file(GLOB SOURCES src/*.c)
 
