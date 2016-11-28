@@ -57,6 +57,7 @@ int main() {
 			}
 		}
 		SDL_RenderClear(rend);
+		SDL_RenderPresent(rend);
 	}
 	cleanup:
 		//Initialize renderer color
