@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+typedef struct {
+	SDL_Texture *texture;
+	enum {PLAYER} type;
+} EntityData;
+
 SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	//The final texture
 	SDL_Texture* newTexture = NULL;
@@ -25,8 +30,28 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	return newTexture;
 }
 
-void update(ArcadeObject *obj) {
+static inline float clamp(float value, float high, float low) {
+	if(value > high) return high;
+	else if(value < low) return low;
+	else return value;
+}
 
+void update(ArcadeObject *obj) {
+	EntityData *data = obj->data;
+	if(data->type == PLAYER) {
+		const Uint8 *keys = SDL_GetKeyboardState(NULL);
+		bool leftPressed = keys[SDL_SCANCODE_A];
+		bool rightPressed = keys[SDL_SCANCODE_D];
+		if(leftPressed ^ rightPressed) {
+			if(leftPressed) {
+				obj->acceleration.x = -0.01f;
+			} else  {
+				obj->acceleration.x = 0.01f;
+			}
+			printf("%f:%f, %f:%f\n", obj->velocity.x, obj->velocity.y, obj->acceleration.x, obj->acceleration.y);
+		}
+		obj->velocity.x = clamp(obj->velocity.x, -1, 1);
+	}
 }
 
 void collide(ArcadeObject *a, ArcadeObject *b) {
@@ -63,7 +88,9 @@ int main() {
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
 	world_add_tilemap(&world, map);
-	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, texture);
+	EntityData *data = malloc(sizeof(data));
+	*data = (EntityData){ texture, PLAYER };
+	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, data);
 	obj.acceleration.y = 0.5f;
 	world_add(&world, obj);
 	while(true) {
@@ -79,8 +106,9 @@ int main() {
 		for(size_t i = 0; i < qt_len(world.entities); i++) {
 			ArcadeObject *obj = world_get(world, i);
 			Rect bounds = shape_bounding_box(obj->bounds);
+			EntityData *data = obj->data;
 			SDL_Rect rect = {bounds.x, bounds.y, bounds.width, bounds.height};
-			SDL_RenderCopy(rend, obj->data, NULL, &rect);
+			SDL_RenderCopy(rend, data->texture, NULL, &rect);
 		}
 		SDL_RenderPresent(rend);
 		SDL_Delay(10);
