@@ -62,9 +62,8 @@ int main() {
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	world_add(&world, (ArcadeObject){ shape_rect(rect_new(0.f, 0.f, 32.f, 32.f)), vec2_new(0.f, 0.f), 
-			vec2_new(0.f, 1.f), texture });
+			vec2_new(0.f, 0.1f), texture });
 	SDL_Event event;
-	Uint32 previous = SDL_GetTicks();
 	while(true) {
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
@@ -72,7 +71,7 @@ int main() {
 					goto cleanup;
 			}
 		}
-		world_update(world, SDL_GetTicks() - previous, &update, &collide);
+		world_update(world, 1, &update, &collide);
 		SDL_RenderClear(rend);
 		for(size_t i = 0; i < qt_len(world.entities); i++) {
 			ArcadeObject *obj = world_get(world, i);
@@ -82,7 +81,6 @@ int main() {
 		}
 		SDL_RenderPresent(rend);
 		SDL_Delay(10);
-		previous = SDL_GetTicks();
 	}
 	cleanup:
 		//Initialize renderer color
