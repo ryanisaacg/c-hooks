@@ -66,9 +66,8 @@ int main() {
 	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, texture);
 	obj.acceleration.y = 0.5f;
 	world_add(&world, obj);
-	SDL_Event event;
-	ArcadeObject *ptr = qt_get(world.entities, 0);
 	while(true) {
+		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
 				case SDL_QUIT:
