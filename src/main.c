@@ -61,9 +61,13 @@ int main() {
 	SDL_Texture *texture = load_texture(rend, "../img/player.png");
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
-	world_add(&world, (ArcadeObject){ shape_rect(rect_new(0.f, 0.f, 32.f, 32.f)), vec2_new(0.f, 0.f), 
-			vec2_new(0.f, 0.1f), texture });
+	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
+	world_add_tilemap(&world, map);
+	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, texture);
+	obj.acceleration.y = 0.5f;
+	world_add(&world, obj);
 	SDL_Event event;
+	ArcadeObject *ptr = qt_get(world.entities, 0);
 	while(true) {
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
