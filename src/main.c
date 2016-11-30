@@ -54,6 +54,7 @@ void collide(ArcadeObject *a, ArcadeObject *b) {
 
 }
 
+#undef main
 int main() {
 	// *** INITIALIZATION ***
 	//Initialize SDL
