@@ -30,11 +30,6 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	return newTexture;
 }
 
-static inline float clamp(float value, float low, float high) {
-	if(value > high) return high;
-	else if(value < low) return low;
-	else return value;
-}
 
 void update(ArcadeObject *obj) {
 	EntityData *data = obj->data;
@@ -44,12 +39,13 @@ void update(ArcadeObject *obj) {
 		bool rightPressed = keys[SDL_SCANCODE_D];
 		if(leftPressed ^ rightPressed) {
 			if(leftPressed) {
-				obj->acceleration.x = -1;
+				obj->acceleration.x = -1.5f;
 			} else  {
-				obj->acceleration.x = 1;
+				obj->acceleration.x = 1.5f;
 			}
+		} else {
+			obj->acceleration.x = 0;
 		}
-		obj->velocity.x = clamp(obj->velocity.x, -10, 10);
 	}
 }
 
@@ -91,6 +87,8 @@ int main() {
 	*data = (EntityData){ texture, PLAYER };
 	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, data);
 	obj.acceleration.y = 0.5f;
+	obj.max_velocity = vec2_new(10, 20);
+	obj.drag.x = 1;
 	world_add(&world, obj);
 	while(true) {
 		SDL_Event event;
