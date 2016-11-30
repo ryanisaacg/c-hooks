@@ -5,12 +5,13 @@ cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0015 NEW)
 
 add_subdirectory(arcade-physics)
+add_subdirectory(json)
 
-include_directories(include arcade-physics/include arcade-physics/data-structures/include $ENV{SDL2_INCLUDE})
+include_directories(include arcade-physics/include arcade-physics/data-structures/include json/include $ENV{SDL2_INCLUDE})
 link_directories($ENV{SDL2_LIB})
 file(GLOB SOURCES src/*.c)
 
 add_executable(hooks ${SOURCES})
 set_property(TARGET hooks PROPERTY C_STANDARD 99)
 set_target_properties(hooks PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(hooks m arcade-physics SDL2 SDL2_image pthread)
+target_link_libraries(hooks m arcade-physics SDL2 SDL2_image pthread parson)

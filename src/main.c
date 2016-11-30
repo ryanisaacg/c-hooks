@@ -1,4 +1,5 @@
 #include "arcade.h"
+#include "parson.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <stdbool.h>
@@ -79,6 +80,9 @@ int main() {
 	}
 	//Load the player texture
 	SDL_Texture *texture = load_texture(rend, "../img/player.png");
+	//Load the config file
+	JSON_Object *config = json_value_get_object(json_parse_file("../data/config.json"));
+	float gravity = json_object_get_number(config, "gravity");
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
@@ -86,7 +90,7 @@ int main() {
 	EntityData *data = malloc(sizeof(data));
 	*data = (EntityData){ texture, PLAYER };
 	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, data);
-	obj.acceleration.y = 0.5f;
+	obj.acceleration.y = gravity;
 	obj.max_velocity = vec2_new(10, 20);
 	obj.drag.x = 1;
 	world_add(&world, obj);
