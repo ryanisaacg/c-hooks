@@ -30,7 +30,7 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	return newTexture;
 }
 
-static inline float clamp(float value, float high, float low) {
+static inline float clamp(float value, float low, float high) {
 	if(value > high) return high;
 	else if(value < low) return low;
 	else return value;
@@ -44,13 +44,12 @@ void update(ArcadeObject *obj) {
 		bool rightPressed = keys[SDL_SCANCODE_D];
 		if(leftPressed ^ rightPressed) {
 			if(leftPressed) {
-				obj->acceleration.x = -0.01f;
+				obj->acceleration.x = -1;
 			} else  {
-				obj->acceleration.x = 0.01f;
+				obj->acceleration.x = 1;
 			}
-			printf("%f:%f, %f:%f\n", obj->velocity.x, obj->velocity.y, obj->acceleration.x, obj->acceleration.y);
 		}
-		obj->velocity.x = clamp(obj->velocity.x, -1, 1);
+		obj->velocity.x = clamp(obj->velocity.x, -10, 10);
 	}
 }
 
@@ -101,6 +100,7 @@ int main() {
 					goto cleanup;
 			}
 		}
+		ArcadeObject *player = qt_get(world.entities, 0);
 		world_update(world, 1, &update, &collide);
 		SDL_RenderClear(rend);
 		for(size_t i = 0; i < qt_len(world.entities); i++) {
