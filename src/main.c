@@ -32,12 +32,13 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 }
 
 
-void update(ArcadeObject *obj) {
+void update(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
 	if(data->type == PLAYER) {
 		const Uint8 *keys = SDL_GetKeyboardState(NULL);
 		bool leftPressed = keys[SDL_SCANCODE_A];
 		bool rightPressed = keys[SDL_SCANCODE_D];
+		bool jumpPressed = keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_W];
 		if(leftPressed ^ rightPressed) {
 			if(leftPressed) {
 				obj->acceleration.x = -1.5f;
@@ -46,6 +47,9 @@ void update(ArcadeObject *obj) {
 			}
 		} else {
 			obj->acceleration.x = 0;
+		}
+		if(jumpPressed && obj->velocity.y == 0) {
+			obj->velocity.y = -10;
 		}
 	}
 }
