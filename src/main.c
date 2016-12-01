@@ -74,7 +74,7 @@ int main() {
 		exit(-1);
 	}
 	//Create window
-	SDL_Window *window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+	SDL_Window *window = SDL_CreateWindow("Hooks", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
 	if (window == NULL) {
 		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 		exit(-1);
