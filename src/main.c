@@ -83,10 +83,13 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 void update(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
 	if(data->type == ENTITY_PLAYER) {
+		ArcadeObject *hook = data->specific.player.hook;
 		const Uint8 *keys = SDL_GetKeyboardState(NULL);
 		bool leftPressed = keys[SDL_SCANCODE_A];
 		bool rightPressed = keys[SDL_SCANCODE_D];
 		bool jumpPressed = keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_W];
+		int mouse_x, mouse_y;
+		Uint8 mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
 		if(leftPressed ^ rightPressed) {
 			if(leftPressed) {
 				obj->acceleration.x = -player_walk;
@@ -95,6 +98,17 @@ void update(World world, ArcadeObject *obj) {
 			}
 		} else {
 			obj->acceleration.x = 0;
+		}
+		if(!hook->alive) {
+			if(mouse_state & SDL_BUTTON(1)) {
+				hook->alive = true;
+				shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
+				hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
+			}
+		} else {
+			if(vec2_len2(hook->velocity) == 0) {
+				hook->alive = false;
+			}
 		}
 		Rect region = shape_bounding_box(obj->bounds);
 		region.y += 1;
