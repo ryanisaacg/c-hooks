@@ -8,7 +8,7 @@
 
 typedef struct {
 	SDL_Texture *texture;
-	enum {PLAYER} type;
+	enum {ENTITY_PLAYER} type;
 } EntityData;
 
 SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
@@ -35,7 +35,7 @@ float player_jump, player_walk, player, player_gravity, player_gravity_hold;
 
 void update(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
-	if(data->type == PLAYER) {
+	if(data->type == ENTITY_PLAYER) {
 		const Uint8 *keys = SDL_GetKeyboardState(NULL);
 		bool leftPressed = keys[SDL_SCANCODE_A];
 		bool rightPressed = keys[SDL_SCANCODE_D];
@@ -102,7 +102,7 @@ int main() {
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
 	world_add_tilemap(&world, map);
 	EntityData *data = malloc(sizeof(data));
-	*data = (EntityData){ texture, PLAYER };
+	*data = (EntityData){ texture, ENTITY_PLAYER };
 	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, data);
 	obj.acceleration.y = json_object_get_number(player_config, "gravity");
 	obj.max_velocity = vec2_new(json_object_get_number(player_config, "max_x"), json_object_get_number(player_config, "max_y"));
