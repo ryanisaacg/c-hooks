@@ -6,6 +6,12 @@
 		"max_y" : 20,
 		"drag_x" : 1,
 		"walk" : 1.5,
-		"jump" : 6
+		"jump" : 6,
+		"width" : 32
+	},
+	"hook" : {
+		"width" : 32,
+		"height" : 32,
+		"speed" : 10
 	}
 }
