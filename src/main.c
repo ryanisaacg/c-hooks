@@ -89,7 +89,9 @@ int main() {
 	SDL_Texture *texture = load_texture(rend, "../img/player.png");
 	//Load the config file
 	JSON_Object *config = json_value_get_object(json_parse_file("../data/config.json"));
+	JSON_Object *player_config = json_object_get_object(config, "player");
 	float gravity = json_object_get_number(config, "gravity");
+	
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
@@ -97,9 +99,9 @@ int main() {
 	EntityData *data = malloc(sizeof(data));
 	*data = (EntityData){ texture, PLAYER };
 	ArcadeObject obj = arcobj_new(shape_rect(rect_new(0, 0, 32, 32)), false, data);
-	obj.acceleration.y = gravity;
-	obj.max_velocity = vec2_new(10, 20);
-	obj.drag.x = 1;
+	obj.acceleration.y = json_object_get_number(player_config, "gravity");
+	obj.max_velocity = vec2_new(json_object_get_number(player_config, "max_x"), json_object_get_number(player_config, "max_y"));
+	obj.drag.x = json_object_get_number(player_config, "drag_x");
 	world_add(&world, obj);
 	while(true) {
 		SDL_Event event;
