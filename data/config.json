@@ -1,8 +1,10 @@
 {
 	"player" : {
-		"gravity" : 0.1,
-		"max_x" : 10,
+		"gravity" : 0.25,
+		"max_x" : 4,
 		"max_y" : 20,
-		"drag_x" : 1
+		"drag_x" : 1,
+		"walk" : 1.5,
+		"jump" : 6
 	}
 }

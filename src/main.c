@@ -31,6 +31,7 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	return newTexture;
 }
 
+float player_jump, player_walk;
 
 void update(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
@@ -41,9 +42,9 @@ void update(World world, ArcadeObject *obj) {
 		bool jumpPressed = keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_W];
 		if(leftPressed ^ rightPressed) {
 			if(leftPressed) {
-				obj->acceleration.x = -1.5f;
+				obj->acceleration.x = -player_walk;
 			} else  {
-				obj->acceleration.x = 1.5f;
+				obj->acceleration.x = player_walk;
 			}
 		} else {
 			obj->acceleration.x = 0;
@@ -51,7 +52,7 @@ void update(World world, ArcadeObject *obj) {
 		Rect region = shape_bounding_box(obj->bounds);
 		region.y += 1;
 		if(jumpPressed && !world_region_free(world, shape_rect(region), obj)) {
-			obj->velocity.y = -10;
+			obj->velocity.y = -player_jump;
 		}
 	}
 }
@@ -102,6 +103,8 @@ int main() {
 	obj.acceleration.y = json_object_get_number(player_config, "gravity");
 	obj.max_velocity = vec2_new(json_object_get_number(player_config, "max_x"), json_object_get_number(player_config, "max_y"));
 	obj.drag.x = json_object_get_number(player_config, "drag_x");
+	player_walk = json_object_get_number(player_config, "walk"); //Global values
+	player_jump = json_object_get_number(player_config, "jump"); //global values
 	world_add(&world, obj);
 	while(true) {
 		SDL_Event event;
