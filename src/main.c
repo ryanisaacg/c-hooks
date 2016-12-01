@@ -48,7 +48,9 @@ void update(World world, ArcadeObject *obj) {
 		} else {
 			obj->acceleration.x = 0;
 		}
-		if(jumpPressed && obj->velocity.y == 0) {
+		Rect region = shape_bounding_box(obj->bounds);
+		region.y += 1;
+		if(jumpPressed && !world_region_free(world, shape_rect(region), obj)) {
 			obj->velocity.y = -10;
 		}
 	}
