@@ -2,9 +2,9 @@
 	"player" : {
 		"gravity" : 0.35,
 		"hold-gravity" : 0.15,
-		"max_x" : 4,
-		"max_y" : 20,
-		"drag_x" : 1,
+		"max-x" : 4,
+		"max-y" : 20,
+		"drag-x" : 1,
 		"walk" : 1.5,
 		"jump" : 6,
 		"width" : 32,
