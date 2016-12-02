@@ -4,6 +4,8 @@
 		"hold-gravity" : 0.15,
 		"max-x" : 4,
 		"max-y" : 20,
+		"reel-max-x" : 30,
+		"reel-max-y" : 30,
 		"drag-x" : 1,
 		"walk" : 1.5,
 		"jump" : 6,
@@ -13,6 +15,7 @@
 	"hook" : {
 		"width" : 32,
 		"height" : 32,
-		"speed" : 10
+		"speed" : 10,
+		"reel" : 20
 	}
 }

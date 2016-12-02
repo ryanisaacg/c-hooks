@@ -7,8 +7,9 @@
 #include <stdio.h>
 
 SDL_Texture *player_texture, *hook_texture;
-float player_jump, player_walk, player_gravity, player_gravity_hold, player_width, player_height, player_drag_x, player_max_x, player_max_y;
-float hook_width, hook_height, hook_speed;
+float player_jump, player_walk, player_gravity, player_gravity_hold, player_width, player_height, player_drag_x, player_max_x, player_max_y,
+	  player_reel_max_x, player_reel_max_y;
+float hook_width, hook_height, hook_speed, hook_reel_speed;
 SDL_Renderer *rend;
 Group *player_group;
 
@@ -111,12 +112,21 @@ void update(World world, ArcadeObject *obj) {
 				shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
 				hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
 			}
-		} else {
+		} else if(world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
 			Rect bounds = shape_bounding_box(hook->bounds);
 			bounds.x += hook->velocity.x;
 			bounds.y += hook->velocity.y;
 			if(!world_region_free(world, shape_rect(bounds), hook)) {
+				shape_set_position(&hook->bounds, vec2_add(hook->velocity, shape_get_position(hook->bounds)));
+			}
+		} else {
+			Vector2 diff = vec2_sub(shape_get_position(hook->bounds), shape_get_position(obj->bounds));
+			if(vec2_len2(diff) <= 90) {
 				hook->alive = false;
+				obj->max_velocity = vec2_new(player_max_x, player_max_y);
+			} else {
+				obj->velocity = vec2_with_len(diff, hook_reel_speed);
+				obj->max_velocity = vec2_new(player_reel_max_x, player_reel_max_y);
 			}
 		}
 		Rect region = shape_bounding_box(obj->bounds);
@@ -128,7 +138,6 @@ void update(World world, ArcadeObject *obj) {
 		if(!jumpPressed) {
 			obj->acceleration.y = player_gravity;
 		}
-	} else {
 	}
 }
 
@@ -190,9 +199,12 @@ int main() {
 	player_drag_x 		= json_object_get_number(player_config, "drag-x");
 	player_max_x 		= json_object_get_number(player_config, "max-x");
 	player_max_y 		= json_object_get_number(player_config, "max-y");
+	player_reel_max_x	= json_object_get_number(player_config, "reel-max-x"); 
+	player_reel_max_y	= json_object_get_number(player_config, "reel-max-y"); 
 	hook_width			= json_object_get_number(hook_config, "width");
 	hook_height			= json_object_get_number(hook_config, "height");
 	hook_speed			= json_object_get_number(hook_config, "speed");
+	hook_reel_speed		= json_object_get_number(hook_config, "reel");
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
