@@ -6,14 +6,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-SDL_Texture *player_texture, *hook_texture;
+SDL_Texture *player_texture, *hook_texture, *fish_texture;
 float player_jump, player_walk, player_gravity, player_gravity_hold, player_width, player_height, player_drag_x, player_max_x, player_max_y,
 	  player_reel_max_x, player_reel_max_y;
 float hook_width, hook_height, hook_speed, hook_reel_speed;
+float fish_radius;
 SDL_Renderer *rend;
 Group *player_group;
 
-typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK} EntityType;
+typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH} EntityType;
 
 typedef struct {
 	SDL_Texture *texture;
@@ -21,6 +22,7 @@ typedef struct {
 	union {
 		struct { ArcadeObject *hook; } player;
 		struct { ArcadeObject *parent, *target; } hook;
+		struct { } fish;
 	} specific;
 } EntityData;
 
@@ -46,6 +48,10 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			data->specific.hook.target = NULL;
 			data->specific.hook.parent = NULL;
 			group = player_group;
+			break;
+		case ENTITY_FISH:
+			bounds = shape_circ(circ_new(position.x, position.y, fish_radius));
+			data->texture = fish_texture;
 			break;
 	}
 	ArcadeObject obj = arcobj_new(bounds, solid, data);
