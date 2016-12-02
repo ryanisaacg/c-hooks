@@ -10,6 +10,7 @@ SDL_Texture *player_texture, *hook_texture;
 float player_jump, player_walk, player_gravity, player_gravity_hold, player_width, player_height, player_drag_x, player_max_x, player_max_y;
 float hook_width, hook_height, hook_speed;
 SDL_Renderer *rend;
+Group *player_group;
 
 typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK} EntityType;
 
@@ -26,7 +27,8 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 	EntityData *data = malloc(sizeof(*data));
 	data->type = type;
 	Shape bounds;
-	Vector2 acceleration = vec2_new(0, 0), drag = vec2_new(0, 0), max_velocity = vec2_new(0, 0);
+	Vector2 acceleration = vec2_new(0, 0), drag = vec2_new(0, 0), max_velocity = vec2_new(-1, -1);
+	Group *group = NULL;
 	bool solid = false;
 	switch(type) {
 		case ENTITY_PLAYER:
@@ -35,23 +37,27 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			drag.x = player_drag_x;
 			max_velocity = vec2_new(player_max_x, player_max_y);
 			data->texture = player_texture;
+			group = player_group;
 			break;
 		case ENTITY_HOOK:
 			bounds = shape_rect(rect_new(position.x, position.y, hook_width, hook_height));
 			data->texture = hook_texture;
 			data->specific.hook.target = NULL;
 			data->specific.hook.parent = NULL;
+			group = player_group;
 			break;
 	}
 	ArcadeObject obj = arcobj_new(bounds, solid, data);
 	obj.acceleration = acceleration;
 	obj.drag = drag;
 	obj.max_velocity = max_velocity;
+	obj.group = group;
 	size_t index = world_add(world, obj);
 	ArcadeObject *current = world_get(*world, index);
 	if(type == ENTITY_PLAYER) {
 		ArcadeObject *hook = new_entity(world, position, ENTITY_HOOK);
 		hook->alive = false;
+		hook->group = player_group;
 		EntityData *hook_data = hook->data;
 		data->specific.hook.parent = current;
 		EntityData *player_data = current->data;
@@ -106,7 +112,10 @@ void update(World world, ArcadeObject *obj) {
 				hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
 			}
 		} else {
-			if(vec2_len2(hook->velocity) == 0) {
+			Rect bounds = shape_bounding_box(hook->bounds);
+			bounds.x += hook->velocity.x;
+			bounds.y += hook->velocity.y;
+			if(!world_region_free(world, shape_rect(bounds), hook)) {
 				hook->alive = false;
 			}
 		}
@@ -119,6 +128,7 @@ void update(World world, ArcadeObject *obj) {
 		if(!jumpPressed) {
 			obj->acceleration.y = player_gravity;
 		}
+	} else {
 	}
 }
 
@@ -135,7 +145,7 @@ void frame(World world, ArcadeObject *obj) {
 }
 
 void collide(ArcadeObject *a, ArcadeObject *b) {
-
+	printf("Collision\n");
 }
 
 #undef main
@@ -165,7 +175,7 @@ int main() {
 	}
 	//Load the player texture
 	player_texture 	= load_texture(rend, "../img/player.png");
-	hook_texture 	= load_texture(rend, "../img/player.png");
+	hook_texture 	= load_texture(rend, "../img/hook.png");
 	//Load the config file
 	JSON_Object *config 		= json_value_get_object(json_parse_file("../data/config.json"));
 	JSON_Object *player_config 	= json_object_get_object(config, "player");
@@ -186,6 +196,8 @@ int main() {
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
+	player_group = world_add_group(&world, group_new());
+	group_blacklist_self(player_group);
 	world_add_tilemap(&world, map);
 	new_entity(&world, vec2_new(0, 0), ENTITY_PLAYER);
 	while(true) {
