@@ -5,14 +5,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 SDL_Texture *player_texture, *hook_texture, *fish_texture;
 float player_jump, player_walk, player_gravity, player_gravity_hold, player_width, player_height, player_drag_x, player_max_x, player_max_y,
 	  player_reel_max_x, player_reel_max_y;
 float hook_width, hook_height, hook_speed, hook_reel_speed;
-float fish_radius;
+float fish_radius, fish_gravity, fish_leap, fish_variance, fish_max_x, fish_max_y;
 SDL_Renderer *rend;
-Group *player_group;
+Group *player_group, *enemy_group;
 
 typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH} EntityType;
 
@@ -25,6 +26,12 @@ typedef struct {
 		struct { } fish;
 	} specific;
 } EntityData;
+
+float rand_num(float min, float max) {
+	float diff = max - min;
+	float value = rand() * diff / RAND_MAX;
+	return value + min;
+}
 
 ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 	EntityData *data = malloc(sizeof(*data));
@@ -51,7 +58,10 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			break;
 		case ENTITY_FISH:
 			bounds = shape_circ(circ_new(position.x, position.y, fish_radius));
+			max_velocity = vec2_new(fish_max_x, fish_max_y);
 			data->texture = fish_texture;
+			acceleration.y = fish_gravity;
+			group = enemy_group;
 			break;
 	}
 	ArcadeObject obj = arcobj_new(bounds, solid, data);
@@ -93,57 +103,82 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 	return newTexture;
 }
 
+void update_player(World world, ArcadeObject *obj) {
+	EntityData *data = obj->data;
+	ArcadeObject *hook = data->specific.player.hook;
+	const Uint8 *keys = SDL_GetKeyboardState(NULL);
+	bool leftPressed = keys[SDL_SCANCODE_A];
+	bool rightPressed = keys[SDL_SCANCODE_D];
+	bool jumpPressed = keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_W];
+	int mouse_x, mouse_y;
+	Uint8 mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
+	if(leftPressed ^ rightPressed) {
+		if(leftPressed) {
+			obj->acceleration.x = -player_walk;
+		} else  {
+			obj->acceleration.x = player_walk;
+		}
+	} else {
+		obj->acceleration.x = 0;
+	}
+	if(!hook->alive) {
+		if(mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			hook->alive = true;
+			shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
+			hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
+		}
+	} else if(world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
+		Rect bounds = shape_bounding_box(hook->bounds);
+		bounds.x += hook->velocity.x;
+		bounds.y += hook->velocity.y;
+		if(!world_region_free(world, shape_rect(bounds), hook)) {
+			shape_set_position(&hook->bounds, vec2_add(hook->velocity, shape_get_position(hook->bounds)));
+		}
+	} else {
+		Vector2 diff = vec2_sub(shape_get_position(hook->bounds), shape_get_position(obj->bounds));
+		if(vec2_len(diff) <= 90) {
+			hook->alive = false;
+			obj->max_velocity = vec2_new(player_max_x, player_max_y);
+		} else {
+			obj->velocity = vec2_with_len(diff, hook_reel_speed);
+			obj->max_velocity = vec2_new(player_reel_max_x, player_reel_max_y);
+		}
+	}
+	Rect region = shape_bounding_box(obj->bounds);
+	region.y += 1;
+	if(jumpPressed && !world_region_free(world, shape_rect(region), obj)) {
+		obj->velocity.y = -player_jump;
+		obj->acceleration.y = player_gravity_hold;
+	}
+	if(!jumpPressed) {
+		obj->acceleration.y = player_gravity;
+	}
+}
+
+void update_fish(World world, ArcadeObject *obj) {
+	Rect bounds = shape_bounding_box(obj->bounds);
+	bounds.x += obj->velocity.x;
+	if(!world_region_free(world, shape_rect(bounds), obj)) {
+		obj->velocity.x *= -1;
+		obj->velocity.x += rand_num(-fish_variance, fish_variance);
+		bounds.x += 2 * obj->velocity.x;
+	}
+	bounds.y += obj->velocity.y;
+	if(!world_region_free(world, shape_rect(bounds), obj)) {
+		obj->velocity.y *= -1;
+		obj->velocity.x += rand_num(-fish_variance, fish_variance);
+	}
+}
+
 void update(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
-	if(data->type == ENTITY_PLAYER) {
-		ArcadeObject *hook = data->specific.player.hook;
-		const Uint8 *keys = SDL_GetKeyboardState(NULL);
-		bool leftPressed = keys[SDL_SCANCODE_A];
-		bool rightPressed = keys[SDL_SCANCODE_D];
-		bool jumpPressed = keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_W];
-		int mouse_x, mouse_y;
-		Uint8 mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
-		if(leftPressed ^ rightPressed) {
-			if(leftPressed) {
-				obj->acceleration.x = -player_walk;
-			} else  {
-				obj->acceleration.x = player_walk;
-			}
-		} else {
-			obj->acceleration.x = 0;
-		}
-		if(!hook->alive) {
-			if(mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-				hook->alive = true;
-				shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
-				hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
-			}
-		} else if(world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
-			Rect bounds = shape_bounding_box(hook->bounds);
-			bounds.x += hook->velocity.x;
-			bounds.y += hook->velocity.y;
-			if(!world_region_free(world, shape_rect(bounds), hook)) {
-				shape_set_position(&hook->bounds, vec2_add(hook->velocity, shape_get_position(hook->bounds)));
-			}
-		} else {
-			Vector2 diff = vec2_sub(shape_get_position(hook->bounds), shape_get_position(obj->bounds));
-			if(vec2_len2(diff) <= 90) {
-				hook->alive = false;
-				obj->max_velocity = vec2_new(player_max_x, player_max_y);
-			} else {
-				obj->velocity = vec2_with_len(diff, hook_reel_speed);
-				obj->max_velocity = vec2_new(player_reel_max_x, player_reel_max_y);
-			}
-		}
-		Rect region = shape_bounding_box(obj->bounds);
-		region.y += 1;
-		if(jumpPressed && !world_region_free(world, shape_rect(region), obj)) {
-			obj->velocity.y = -player_jump;
-			obj->acceleration.y = player_gravity_hold;
-		}
-		if(!jumpPressed) {
-			obj->acceleration.y = player_gravity;
-		}
+	switch(data->type) {
+		case ENTITY_PLAYER:
+			update_player(world, obj);
+			break;
+		case ENTITY_FISH:
+			update_fish(world, obj);
+			break;
 	}
 }
 
@@ -165,6 +200,7 @@ void collide(ArcadeObject *a, ArcadeObject *b) {
 
 #undef main
 int main() {
+	srand(time(NULL));
 	// *** INITIALIZATION ***
 	//Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -191,10 +227,12 @@ int main() {
 	//Load the player texture
 	player_texture 	= load_texture(rend, "../img/player.png");
 	hook_texture 	= load_texture(rend, "../img/hook.png");
+	fish_texture 	= load_texture(rend, "../img/fish.png");
 	//Load the config file
 	JSON_Object *config 		= json_value_get_object(json_parse_file("../data/config.json"));
 	JSON_Object *player_config 	= json_object_get_object(config, "player");
 	JSON_Object *hook_config 	= json_object_get_object(config, "hook");
+	JSON_Object *fish_config	= json_object_get_object(config, "fish");
 	//Global values
 	player_walk 		= json_object_get_number(player_config, "walk"); 
 	player_jump 		= json_object_get_number(player_config, "jump");
@@ -211,13 +249,21 @@ int main() {
 	hook_height			= json_object_get_number(hook_config, "height");
 	hook_speed			= json_object_get_number(hook_config, "speed");
 	hook_reel_speed		= json_object_get_number(hook_config, "reel");
+	fish_radius			= json_object_get_number(fish_config, "radius");
+	fish_gravity		= json_object_get_number(fish_config, "gravity");
+	fish_leap			= json_object_get_number(fish_config, "leap");
+	fish_variance		= json_object_get_number(fish_config, "variance");
+	fish_max_x			= json_object_get_number(fish_config, "max-x");
+	fish_max_y			= json_object_get_number(fish_config, "max-y");
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
 	player_group = world_add_group(&world, group_new());
+	enemy_group = world_add_group(&world, group_new());
 	group_blacklist_self(player_group);
 	world_add_tilemap(&world, map);
 	new_entity(&world, vec2_new(0, 0), ENTITY_PLAYER);
+	new_entity(&world, vec2_new(100, 100), ENTITY_FISH);
 	while(true) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
