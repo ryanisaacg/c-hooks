@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "textures.h"
 #include <time.h>
 
 SDL_Texture *player_texture, *hook_texture, *fish_texture;
@@ -106,6 +107,7 @@ SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
 void update_player(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
 	ArcadeObject *hook = data->specific.player.hook;
+	EntityData *hook_data = hook->data;
 	const Uint8 *keys = SDL_GetKeyboardState(NULL);
 	bool leftPressed = keys[SDL_SCANCODE_A];
 	bool rightPressed = keys[SDL_SCANCODE_D];
@@ -127,7 +129,8 @@ void update_player(World world, ArcadeObject *obj) {
 			shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
 			hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
 		}
-	} else if(world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
+	} else if(hook_data->specific.hook.target == NULL 
+			&& world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
 		Rect bounds = shape_bounding_box(hook->bounds);
 		bounds.x += hook->velocity.x;
 		bounds.y += hook->velocity.y;
@@ -137,6 +140,10 @@ void update_player(World world, ArcadeObject *obj) {
 	} else {
 		Vector2 diff = vec2_sub(shape_get_position(hook->bounds), shape_get_position(obj->bounds));
 		if(vec2_len(diff) <= 90) {
+			if(hook_data->specific.hook.target != NULL) {
+				shape_set_position(&hook_data->specific.hook.target->bounds, shape_get_position(hook->bounds));
+			}
+			hook_data->specific.hook.target = NULL;
 			hook->alive = false;
 			obj->max_velocity = vec2_new(player_max_x, player_max_y);
 		} else {
@@ -152,6 +159,15 @@ void update_player(World world, ArcadeObject *obj) {
 	}
 	if(!jumpPressed) {
 		obj->acceleration.y = player_gravity;
+	}
+}
+
+void update_hook(ArcadeObject *obj) {
+	EntityData *data = obj->data;
+	ArcadeObject *target = data->specific.hook.target;
+	if(target != NULL) {
+		shape_set_position(&target->bounds, shape_get_position(obj->bounds));
+		target->velocity = obj->velocity;
 	}
 }
 
@@ -176,9 +192,22 @@ void update(World world, ArcadeObject *obj) {
 		case ENTITY_PLAYER:
 			update_player(world, obj);
 			break;
+		case ENTITY_HOOK:
+			update_hook(obj);
+			break;
 		case ENTITY_FISH:
 			update_fish(world, obj);
 			break;
+	}
+}
+
+void collide(ArcadeObject *a, ArcadeObject *b) {
+	EntityData *aData = a->data;
+	EntityData *bData = b->data;
+	if(aData->type == ENTITY_HOOK && aData->specific.hook.target == NULL) {
+		aData->specific.hook.target = b;
+		shape_set_position(&b->bounds, shape_get_position(a->bounds));
+		a->velocity = vec2_new(0, 0);
 	}
 }
 
@@ -192,10 +221,6 @@ void draw(ArcadeObject *obj) {
 void frame(World world, ArcadeObject *obj) {
 	update(world, obj);
 	draw(obj);
-}
-
-void collide(ArcadeObject *a, ArcadeObject *b) {
-	printf("Collision\n");
 }
 
 #undef main

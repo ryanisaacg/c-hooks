@@ -19,7 +19,7 @@
 		"reel" : 20
 	},
 	"fish" : {
-		"radius" : 8,
+		"radius" : 12,
 		"gravity" : 0.1,
 		"leap" : 12,
 		"variance" : 10,
