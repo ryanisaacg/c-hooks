@@ -1,28 +1,24 @@
 #include "arcade.h"
+#include "config.h"
 #include "parson.h"
 #include <SDL.h>
-#include <SDL_image.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "textures.h"
 #include <time.h>
 
-SDL_Texture *player_texture, *hook_texture, *fish_texture;
-float player_jump, player_walk, player_gravity, player_gravity_hold, player_width, player_height, player_drag_x, player_max_x, player_max_y,
-	  player_reel_max_x, player_reel_max_y;
-float hook_width, hook_height, hook_speed, hook_reel_speed;
-float fish_radius, fish_gravity, fish_leap, fish_variance, fish_max_x, fish_max_y;
+Animation player_anim, hook_anim, fish_anim;
 SDL_Renderer *rend;
 Group *player_group, *enemy_group;
 
 typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH} EntityType;
 
 typedef struct {
-	SDL_Texture *texture;
-	enum EntityType type;
+	Animation current;
+	EntityType type;
 	union {
-		struct { ArcadeObject *hook; } player;
+		struct { ArcadeObject *hook; Animation idle, walk, jump; } player;
 		struct { ArcadeObject *parent, *target; } hook;
 		struct { } fish;
 	} specific;
@@ -47,12 +43,12 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			acceleration.y = player_gravity;
 			drag.x = player_drag_x;
 			max_velocity = vec2_new(player_max_x, player_max_y);
-			data->texture = player_texture;
+			data->current = player_anim;
 			group = player_group;
 			break;
 		case ENTITY_HOOK:
 			bounds = shape_rect(rect_new(position.x, position.y, hook_width, hook_height));
-			data->texture = hook_texture;
+			data->current = hook_anim;
 			data->specific.hook.target = NULL;
 			data->specific.hook.parent = NULL;
 			group = player_group;
@@ -60,7 +56,7 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 		case ENTITY_FISH:
 			bounds = shape_circ(circ_new(position.x, position.y, fish_radius));
 			max_velocity = vec2_new(fish_max_x, fish_max_y);
-			data->texture = fish_texture;
+			data->current = fish_anim;
 			acceleration.y = fish_gravity;
 			group = enemy_group;
 			break;
@@ -82,26 +78,6 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 		player_data->specific.player.hook = hook;
 	}
 	return current;
-}
-
-SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
-	//The final texture
-	SDL_Texture* newTexture = NULL;
-
-	//Load image at specified path
-	SDL_Surface* loadedSurface = IMG_Load(path);
-	if (loadedSurface == NULL) {
-		printf("Unable to load image %s! SDL_image error: %s\n", path, IMG_GetError());
-	} else {
-		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(rend, loadedSurface);
-		if (newTexture == NULL) {
-			printf("Unable to create texture from %s! SDL Error: %s\n", path, SDL_GetError());
-		}
-		//Get rid of old loaded surface
-		SDL_FreeSurface(loadedSurface);
-	}
-	return newTexture;
 }
 
 void update_player(World world, ArcadeObject *obj) {
@@ -214,8 +190,9 @@ void collide(ArcadeObject *a, ArcadeObject *b) {
 void draw(ArcadeObject *obj) {
 	Rect bounds = shape_bounding_box(obj->bounds);
 	EntityData *data = obj->data;
-	SDL_Rect rect = {bounds.x, bounds.y, bounds.width, bounds.height};
-	SDL_RenderCopy(rend, data->texture, NULL, &rect);
+	Rect rect = {bounds.x, bounds.y, bounds.width, bounds.height};
+	animation_next_tick(&data->current);
+	animation_draw(&data->current, rend, rect);
 }
 
 void frame(World world, ArcadeObject *obj) {
@@ -250,36 +227,10 @@ int main() {
 		exit(-1);
 	}
 	//Load the player texture
-	player_texture 	= load_texture(rend, "../img/player.png");
-	hook_texture 	= load_texture(rend, "../img/hook.png");
-	fish_texture 	= load_texture(rend, "../img/fish.png");
-	//Load the config file
-	JSON_Object *config 		= json_value_get_object(json_parse_file("../data/config.json"));
-	JSON_Object *player_config 	= json_object_get_object(config, "player");
-	JSON_Object *hook_config 	= json_object_get_object(config, "hook");
-	JSON_Object *fish_config	= json_object_get_object(config, "fish");
-	//Global values
-	player_walk 		= json_object_get_number(player_config, "walk"); 
-	player_jump 		= json_object_get_number(player_config, "jump");
-	player_gravity 		= json_object_get_number(player_config, "gravity"); 
-	player_gravity_hold = json_object_get_number(player_config, "hold-gravity");
-	player_width 		= json_object_get_number(player_config, "width");
-	player_height 		= json_object_get_number(player_config, "height");
-	player_drag_x 		= json_object_get_number(player_config, "drag-x");
-	player_max_x 		= json_object_get_number(player_config, "max-x");
-	player_max_y 		= json_object_get_number(player_config, "max-y");
-	player_reel_max_x	= json_object_get_number(player_config, "reel-max-x"); 
-	player_reel_max_y	= json_object_get_number(player_config, "reel-max-y"); 
-	hook_width			= json_object_get_number(hook_config, "width");
-	hook_height			= json_object_get_number(hook_config, "height");
-	hook_speed			= json_object_get_number(hook_config, "speed");
-	hook_reel_speed		= json_object_get_number(hook_config, "reel");
-	fish_radius			= json_object_get_number(fish_config, "radius");
-	fish_gravity		= json_object_get_number(fish_config, "gravity");
-	fish_leap			= json_object_get_number(fish_config, "leap");
-	fish_variance		= json_object_get_number(fish_config, "variance");
-	fish_max_x			= json_object_get_number(fish_config, "max-x");
-	fish_max_y			= json_object_get_number(fish_config, "max-y");
+	player_anim = animation_from_texture(texture_new(load_texture(rend, "../img/player.png")));
+	hook_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/hook.png")));
+	fish_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
+	config_load("../data/config.json");
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);

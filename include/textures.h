@@ -2,6 +2,7 @@
 
 #include "arcade.h"
 #include "SDL.h"
+#include <SDL_image.h>
 
 typedef struct {
 	Rect region;
@@ -13,7 +14,9 @@ typedef struct {
 	int ticks_per_frame, current_ticks, current_frame;
 } Animation;
 
-Texture texture_new(SDL_Texture *texture, Rect region);
+SDL_Texture *load_texture(SDL_Renderer *rend, char *path);
+Texture texture_new(SDL_Texture *texture);
+Texture texture_new_region(SDL_Texture *texture, Rect region);
 void texture_draw(Texture texture, SDL_Renderer *rend, Rect destination);
 Animation animation_new(int ticks_per_frame);
 Animation animation_from_texture(Texture tex);

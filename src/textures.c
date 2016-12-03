@@ -1,11 +1,39 @@
 #include <stdlib.h>
 #include "textures.h"
 
-Texture texture_new(SDL_Texture *texture, Rect region) {
+SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
+	//The final texture
+	SDL_Texture* newTexture = NULL;
+
+	//Load image at specified path
+	SDL_Surface* loadedSurface = IMG_Load(path);
+	if (loadedSurface == NULL) {
+		printf("Unable to load image %s! SDL_image error: %s\n", path, IMG_GetError());
+	} else {
+		//Create texture from surface pixels
+		newTexture = SDL_CreateTextureFromSurface(rend, loadedSurface);
+		if (newTexture == NULL) {
+			printf("Unable to create texture from %s! SDL Error: %s\n", path, SDL_GetError());
+		}
+		//Get rid of old loaded surface
+		SDL_FreeSurface(loadedSurface);
+	}
+	return newTexture;
+}
+Texture texture_new(SDL_Texture *texture) {
+	int width, height;
+	if(SDL_QueryTexture(texture, NULL, NULL, &width, &height) != 0) {
+		printf("Unable to query texture! SDL Error: %s\n", SDL_GetError());
+	}
+	Rect region = {0, 0, width, height};
+	return texture_new_region(texture, region); 
+}
+Texture texture_new_region(SDL_Texture *texture, Rect region) {
 	return (Texture) { region, texture };
 }
 void texture_draw(Texture texture, SDL_Renderer *rend, Rect dest) {
-	if(SDL_RenderCopy(rend, texture.texture, &texture.region, &dest) != 0) {
+	SDL_Rect destination = { (int)dest.x, (int)dest.y, (int)dest.width, (int)dest.height };
+	if(SDL_RenderCopy(rend, texture.texture, &texture.region, &destination) != 0) {
 		printf("RenderCopy call failed! SDL Error: %s\n", SDL_GetError());
 		exit(-1);
 	}
