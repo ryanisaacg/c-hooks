@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "textures.h"
 
 SDL_Texture* load_texture(SDL_Renderer *rend, char *path) {
