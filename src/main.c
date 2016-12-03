@@ -17,6 +17,7 @@ typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH} EntityType;
 typedef struct {
 	Animation current;
 	EntityType type;
+	int health, iframes;
 	union {
 		struct { ArcadeObject *hook; Animation idle, walk, jump; } player;
 		struct { ArcadeObject *parent, *target; } hook;
@@ -32,6 +33,7 @@ float rand_num(float min, float max) {
 
 ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 	EntityData *data = malloc(sizeof(*data));
+	data->iframes = 0;
 	data->type = type;
 	Shape bounds;
 	Vector2 acceleration = vec2_new(0, 0), drag = vec2_new(0, 0), max_velocity = vec2_new(-1, -1);
@@ -44,6 +46,7 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			drag.x = player_drag_x;
 			max_velocity = vec2_new(player_max_x, player_max_y);
 			data->current = player_anim;
+			data->health = 5;
 			group = player_group;
 			break;
 		case ENTITY_HOOK:
@@ -51,6 +54,7 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			data->current = hook_anim;
 			data->specific.hook.target = NULL;
 			data->specific.hook.parent = NULL;
+			data->health = -1;
 			group = player_group;
 			break;
 		case ENTITY_FISH:
@@ -58,6 +62,7 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			max_velocity = vec2_new(fish_max_x, fish_max_y);
 			data->current = fish_anim;
 			acceleration.y = fish_gravity;
+			data->health = 2;
 			group = enemy_group;
 			break;
 	}
@@ -78,6 +83,18 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 		player_data->specific.player.hook = hook;
 	}
 	return current;
+}
+
+void hurt(ArcadeObject *object, int damage, int iframes) {
+	EntityData *data = object->data;
+	if(data->health > 0 && data->iframes == 0) {
+		data->health -= damage;
+		data->iframes = iframes;
+		printf("%d : %d\n", data->type, data->health);
+		if(data->health <= 0) {
+			object->alive = false;
+		}
+	}
 }
 
 void update_player(World world, ArcadeObject *obj) {
@@ -164,6 +181,9 @@ void update_fish(World world, ArcadeObject *obj) {
 
 void update(World world, ArcadeObject *obj) {
 	EntityData *data = obj->data;
+	if(data->iframes > 0) {
+		data->iframes--;
+	}
 	switch(data->type) {
 		case ENTITY_PLAYER:
 			update_player(world, obj);
@@ -180,10 +200,19 @@ void update(World world, ArcadeObject *obj) {
 void collide(ArcadeObject *a, ArcadeObject *b) {
 	EntityData *aData = a->data;
 	EntityData *bData = b->data;
-	if(aData->type == ENTITY_HOOK && aData->specific.hook.target == NULL) {
+	if(aData->type == ENTITY_PLAYER) {
+		EntityData *hookData = aData->specific.player.hook->data;
+		ArcadeObject *hookTarget = hookData->specific.hook.target;
+		if(hookTarget == NULL && bData->iframes == 0) {
+			hurt(a, 1, 60);
+		} else {
+			hurt(b, 1, 30);
+		}
+	} else if(aData->type == ENTITY_HOOK && aData->specific.hook.target == NULL) {
 		aData->specific.hook.target = b;
 		shape_set_position(&b->bounds, shape_get_position(a->bounds));
 		a->velocity = vec2_new(0, 0);
+		hurt(b, 1, 0);
 	}
 }
 
