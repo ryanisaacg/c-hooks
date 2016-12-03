@@ -32,8 +32,10 @@ Texture texture_new_region(SDL_Texture *texture, Rect region) {
 	return (Texture) { region, texture };
 }
 void texture_draw(Texture texture, SDL_Renderer *rend, Rect dest) {
+	Rect src = texture.region;
+	SDL_Rect source = {(int)src.x, (int)src.y, (int)src.width, (int)src.height };
 	SDL_Rect destination = { (int)dest.x, (int)dest.y, (int)dest.width, (int)dest.height };
-	if(SDL_RenderCopy(rend, texture.texture, &texture.region, &destination) != 0) {
+	if(SDL_RenderCopy(rend, texture.texture, &source, &destination) != 0) {
 		printf("RenderCopy call failed! SDL Error: %s\n", SDL_GetError());
 		exit(-1);
 	}
@@ -58,10 +60,10 @@ void animation_add_frame(Animation *anim, Texture frame) {
 }
 void animation_next_tick(Animation *anim) {
 	anim->current_ticks++;
-	if(anim->current_ticks > anim->ticks_per_frame) {
+	if(anim->current_ticks >= anim->ticks_per_frame) {
 		anim->current_ticks = 0;
 		anim->current_frame++;
-		if(anim->current_frame > anim->frames.length) {
+		if(anim->current_frame >= anim->frames.length) {
 			anim->current_frame = 0;
 		}
 	}
