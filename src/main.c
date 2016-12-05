@@ -226,7 +226,8 @@ void draw(ArcadeObject *obj) {
 	bounds.x = position.x;
 	bounds.y = position.y;
 	float rotation = shape_get_rotation(obj->bounds);
-	animation_draw_ex(data->current, rend, bounds, rotation, false, false);
+	Uint8 alpha = (data->iframes % 8 > 3) ? 0x88 : 0xff;
+	animation_draw_ex(data->current, rend, bounds, rotation, false, false, alpha);
 }
 
 void frame(World world, ArcadeObject *obj) {
@@ -259,6 +260,10 @@ int main() {
 	rend = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (rend == NULL) {
 		printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+		exit(-1);
+	}
+	if( SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND)) {
+		printf("Failed to set the blend mode! SDL Error: %s\n", SDL_GetError());
 		exit(-1);
 	}
 	//Load the player texture
