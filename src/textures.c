@@ -32,6 +32,11 @@ Texture texture_new(SDL_Texture *texture) {
 Texture texture_new_region(SDL_Texture *texture, Rect region) {
 	return (Texture) { region, texture, vec2_new(region.width / 2, region.height / 2) };
 }
+Texture texture_get_subtexture(Texture texture, Rect region) {
+	region.x += texture.region.x;
+	region.y += texture.region.y;
+	return texture_new_region(texture.texture, region);
+}
 void texture_draw(Texture texture, SDL_Renderer *rend, Rect dest) {
 	Rect src = texture.region;
 	SDL_Rect source = {(int)src.x, (int)src.y, (int)src.width, (int)src.height };
@@ -65,6 +70,14 @@ Animation animation_from_array(Texture *array, int length, int ticks_per_frame) 
 	Animation anim = animation_new(ticks_per_frame);
 	for(int i = 0; i < length; i++) {
 		animation_add_frame(&anim, array[i]);
+	}
+	return anim;
+}
+Animation animation_from_spritesheet(Texture tex, int frame_width, int ticks_per_frame) {
+	Animation anim = animation_new(ticks_per_frame);
+	for(Rect region = rect_new(0, 0, frame_width, tex.region.height); 
+			region.x + region.width < tex.region.width; region.x += frame_width) {
+		animation_add_frame(&anim, texture_get_subtexture(tex, region));
 	}
 	return anim;
 }
