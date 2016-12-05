@@ -12,7 +12,8 @@
 		"width" : 22,
 		"height" : 57,
 		"speed" : 30,
-		"reel" : 20
+		"reel" : 20,
+		"idle-anim-speed" : 8
 	},
 	"fish" : {
 		"radius" : 12,

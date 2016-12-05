@@ -235,8 +235,9 @@ void frame(World world, ArcadeObject *obj) {
 
 #undef main
 int main() {
-	srand(time(NULL));
 	// *** INITIALIZATION ***
+	srand(time(NULL)); //seed the RNG with the current system time
+	config_load("../data/config.json"); //load the configuration
 	//Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -260,10 +261,9 @@ int main() {
 		exit(-1);
 	}
 	//Load the player texture
-	player_anim = animation_from_spritesheet(texture_new(load_texture(rend, "../img/player_idle.png")), 22, 12);
+	player_anim = animation_from_spritesheet(texture_new(load_texture(rend, "../img/player_idle.png")), 22, player_idle_animation_speed);
 	hook_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/hook.png")));
 	fish_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
-	config_load("../data/config.json");
 	//Create the simulation world
 	World world = world_new(640, 480, 96);
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
