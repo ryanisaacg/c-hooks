@@ -11,9 +11,13 @@
 		"jump" : 6,
 		"width" : 22,
 		"height" : 57,
-		"speed" : 30,
-		"reel" : 20,
 		"idle-anim-speed" : 8
+	},
+	"hook" : {
+		"width" : 32,
+		"height" : 18,
+		"speed" : 30,
+		"reel" : 20
 	},
 	"fish" : {
 		"radius" : 12,
