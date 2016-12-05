@@ -226,7 +226,7 @@ void draw(ArcadeObject *obj) {
 	bounds.x = position.x;
 	bounds.y = position.y;
 	float rotation = shape_get_rotation(obj->bounds);
-	Uint8 alpha = (data->iframes % 8 > 3) ? 0x88 : 0xff;
+	Uint8 alpha = (data->iframes > 0) ? 0x88 : 0xff;
 	animation_draw_ex(data->current, rend, bounds, rotation, false, false, alpha);
 }
 
