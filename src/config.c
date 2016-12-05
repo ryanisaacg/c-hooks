@@ -20,6 +20,7 @@ void config_load(char *filename) {
 	player_reel_max_x			= json_object_get_number(player_config, "reel-max-x"); 
 	player_reel_max_y			= json_object_get_number(player_config, "reel-max-y"); 
 	player_idle_animation_speed = json_object_get_number(player_config, "idle-anim-speed");
+	player_walk_animation_speed = json_object_get_number(player_config, "walk-anim-speed");
 	hook_width					= json_object_get_number(hook_config, "width");
 	hook_height					= json_object_get_number(hook_config, "height");
 	hook_speed					= json_object_get_number(hook_config, "speed");

@@ -8,7 +8,7 @@
 #include "textures.h"
 #include <time.h>
 
-Animation player_anim, hook_anim, fish_anim;
+Animation player_anim_idle, player_anim_walk, hook_anim, fish_anim;
 SDL_Renderer *rend;
 Group *player_group, *enemy_group;
 
@@ -20,7 +20,7 @@ typedef struct {
 	int health, iframes;
 	bool flip_x, flip_y;
 	union {
-		struct { ArcadeObject *hook; Animation idle, walk, jump; } player;
+		struct { ArcadeObject *hook; } player;
 		struct { ArcadeObject *parent, *target; } hook;
 		struct { } fish;
 	} specific;
@@ -48,7 +48,7 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			acceleration.y = player_gravity;
 			drag.x = player_drag_x;
 			max_velocity = vec2_new(player_max_x, player_max_y);
-			data->current = player_anim;
+			data->current = player_anim_idle;
 			data->health = 5;
 			group = player_group;
 			break;
@@ -109,6 +109,10 @@ void update_player(World world, ArcadeObject *obj) {
 	bool jumpPressed = keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_W];
 	int mouse_x, mouse_y;
 	Uint8 mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
+	//store animation progress so animations play
+	int frame = data->current.current_frame;
+	int progress = data->current.current_ticks;
+	data->current = player_anim_idle;
 	if(leftPressed ^ rightPressed) {
 		if(leftPressed) {
 			obj->acceleration.x = -player_walk;
@@ -117,6 +121,7 @@ void update_player(World world, ArcadeObject *obj) {
 			obj->acceleration.x = player_walk;
 			data->flip_x = false;
 		}
+		data->current = player_anim_walk;
 	} else {
 		obj->acceleration.x = 0;
 	}
@@ -159,6 +164,9 @@ void update_player(World world, ArcadeObject *obj) {
 	if(!jumpPressed) {
 		obj->acceleration.y = player_gravity;
 	}
+	//Restore animation progress
+	data->current.current_frame = frame % data->current.frames.length;
+	data->current.current_ticks = progress;
 }
 
 void update_hook(ArcadeObject *obj) {
@@ -272,7 +280,8 @@ int main() {
 		exit(-1);
 	}
 	//Load the player texture
-	player_anim = animation_from_spritesheet(texture_new(load_texture(rend, "../img/player_idle.png")), 22, player_idle_animation_speed);
+	player_anim_idle = animation_from_spritesheet(texture_new(load_texture(rend, "../img/player_idle.png")), 22, player_idle_animation_speed);
+	player_anim_walk = animation_from_spritesheet(texture_new(load_texture(rend, "../img/player_walk.png")), 27, player_walk_animation_speed);
 	hook_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/hook.png")));
 	fish_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
 	//Create the simulation world

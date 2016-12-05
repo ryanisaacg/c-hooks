@@ -11,7 +11,8 @@
 		"jump" : 6,
 		"width" : 22,
 		"height" : 57,
-		"idle-anim-speed" : 8
+		"idle-anim-speed" : 8,
+		"walk-anim-speed": 16
 	},
 	"hook" : {
 		"width" : 32,
