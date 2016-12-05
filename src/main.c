@@ -90,7 +90,6 @@ void hurt(ArcadeObject *object, int damage, int iframes) {
 	if(data->health > 0 && data->iframes == 0) {
 		data->health -= damage;
 		data->iframes = iframes;
-		printf("%d : %d\n", data->type, data->health);
 		if(data->health <= 0) {
 			object->alive = false;
 		}
@@ -121,6 +120,7 @@ void update_player(World world, ArcadeObject *obj) {
 			hook->alive = true;
 			shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
 			hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
+			shape_set_rotation(&hook->bounds, vec2_angle(hook->velocity));
 		}
 	} else if(hook_data->specific.hook.target == NULL 
 			&& world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
@@ -217,11 +217,15 @@ void collide(ArcadeObject *a, ArcadeObject *b) {
 }
 
 void draw(ArcadeObject *obj) {
-	Rect bounds = shape_bounding_box(obj->bounds);
 	EntityData *data = obj->data;
-	Rect rect = {bounds.x, bounds.y, bounds.width, bounds.height};
-	animation_next_tick(&data->current);
-	animation_draw(&data->current, rend, rect);
+	animation_next_tick(&data->current);	
+	Vector2 position = shape_get_position(obj->bounds);
+	Texture *current_texture = animation_get_current_frame(data->current);
+	Rect bounds = current_texture->region;
+	bounds.x = position.x;
+	bounds.y = position.y;
+	float rotation = shape_get_rotation(obj->bounds);
+	animation_draw_ex(data->current, rend, bounds, rotation, false, false);
 }
 
 void frame(World world, ArcadeObject *obj) {
