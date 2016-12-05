@@ -116,9 +116,10 @@ void update_player(World world, ArcadeObject *obj) {
 		obj->acceleration.x = 0;
 	}
 	if(!hook->alive) {
+		//Throw the hook
 		if(mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			hook->alive = true;
-			shape_set_position(&hook->bounds, shape_get_position(obj->bounds));
+			shape_set_position(&hook->bounds, shape_get_center(obj->bounds));
 			hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
 			shape_set_rotation(&hook->bounds, vec2_angle(hook->velocity));
 		}
