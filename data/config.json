@@ -9,12 +9,8 @@
 		"drag-x" : 1,
 		"walk" : 1.5,
 		"jump" : 6,
-		"width" : 32,
-		"height" : 32
-	},
-	"hook" : {
-		"width" : 32,
-		"height" : 18,
+		"width" : 22,
+		"height" : 57,
 		"speed" : 30,
 		"reel" : 20
 	},
