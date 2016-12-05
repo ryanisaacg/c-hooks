@@ -51,7 +51,7 @@ void texture_draw_ex(Texture texture, SDL_Renderer *rend, Rect dest, double angl
 	SDL_Rect source = {(int)src.x, (int)src.y, (int)src.width, (int)src.height };
 	SDL_Rect destination = { (int)dest.x, (int)dest.y, (int)dest.width, (int)dest.height };
 	SDL_Point center = { (int)texture.origin.x, (int)texture.origin.y };
-	SDL_RendererFlip flip = (flip_x & SDL_FLIP_HORIZONTAL) | (flip_y & SDL_FLIP_VERTICAL);
+	SDL_RendererFlip flip = (flip_x ? SDL_FLIP_HORIZONTAL : 0) | (flip_y ? SDL_FLIP_VERTICAL : 0);
 	SDL_SetTextureAlphaMod(texture.texture, alpha);
 	if(SDL_RenderCopyEx(rend, texture.texture, &source, &destination, angle, &center, flip) != 0) {
 		printf("RenderCopyEx call failed! SDL Error: %s\n", SDL_GetError());
