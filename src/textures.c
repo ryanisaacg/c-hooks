@@ -71,6 +71,9 @@ Animation animation_from_array(Texture *array, int length, int ticks_per_frame) 
 void animation_add_frame(Animation *anim, Texture frame) {
 	al_add(&anim->frames, &frame);
 }
+Texture *animation_get_current_frame(Animation anim) {
+	return al_get(anim.frames, anim.current_frame);
+}
 void animation_next_tick(Animation *anim) {
 	anim->current_ticks++;
 	if(anim->current_ticks >= anim->ticks_per_frame) {

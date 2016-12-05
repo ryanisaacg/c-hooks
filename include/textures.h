@@ -24,6 +24,7 @@ Animation animation_new(int ticks_per_frame);
 Animation animation_from_texture(Texture tex);
 Animation animation_from_array(Texture *array, int length, int ticks_per_frame);
 void animation_add_frame(Animation *anim, Texture frame);
+Texture *animation_get_current_frame(Animation anim);
 void animation_next_tick(Animation *anim);
 void animation_draw(Animation anim, SDL_Renderer *rend, Rect destination);
 void animation_draw_ex(Animation anim, SDL_Renderer *rend, Rect destination, double angle, bool fip_x, bool flip_y);
