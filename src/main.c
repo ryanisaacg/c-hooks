@@ -18,6 +18,7 @@ typedef struct {
 	Animation current;
 	EntityType type;
 	int health, iframes;
+	bool flip_x, flip_y;
 	union {
 		struct { ArcadeObject *hook; Animation idle, walk, jump; } player;
 		struct { ArcadeObject *parent, *target; } hook;
@@ -35,6 +36,8 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 	EntityData *data = malloc(sizeof(*data));
 	data->iframes = 0;
 	data->type = type;
+	data->flip_x = false;
+	data->flip_y = false;
 	Shape bounds;
 	Vector2 acceleration = vec2_new(0, 0), drag = vec2_new(0, 0), max_velocity = vec2_new(-1, -1);
 	Group *group = NULL;
@@ -109,8 +112,10 @@ void update_player(World world, ArcadeObject *obj) {
 	if(leftPressed ^ rightPressed) {
 		if(leftPressed) {
 			obj->acceleration.x = -player_walk;
+			data->flip_x = true;
 		} else  {
 			obj->acceleration.x = player_walk;
+			data->flip_x = false;
 		}
 	} else {
 		obj->acceleration.x = 0;
@@ -227,7 +232,7 @@ void draw(ArcadeObject *obj) {
 	bounds.y = position.y;
 	float rotation = shape_get_rotation(obj->bounds);
 	Uint8 alpha = (data->iframes > 0) ? 0x88 : 0xff;
-	animation_draw_ex(data->current, rend, bounds, rotation, false, false, alpha);
+	animation_draw_ex(data->current, rend, bounds, rotation, data->flip_x, data->flip_y, alpha);
 }
 
 void frame(World world, ArcadeObject *obj) {
