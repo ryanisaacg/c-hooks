@@ -260,7 +260,7 @@ int main() {
 		exit(-1);
 	}
 	//Load the player texture
-	player_anim = animation_from_texture(texture_new(load_texture(rend, "../img/player.png")));
+	player_anim = animation_from_spritesheet(texture_new(load_texture(rend, "../img/player_idle.png")), 22, 12);
 	hook_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/hook.png")));
 	fish_anim 	= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
 	config_load("../data/config.json");
