@@ -30,7 +30,7 @@ Texture texture_new(SDL_Texture *texture) {
 	return texture_new_region(texture, region); 
 }
 Texture texture_new_region(SDL_Texture *texture, Rect region) {
-	return (Texture) { region, texture };
+	return (Texture) { region, texture, vec2_new(region.width / 2, region.height / 2) };
 }
 void texture_draw(Texture texture, SDL_Renderer *rend, Rect dest) {
 	Rect src = texture.region;
@@ -41,6 +41,18 @@ void texture_draw(Texture texture, SDL_Renderer *rend, Rect dest) {
 		exit(-1);
 	}
 }
+void texture_draw_ex(Texture texture, SDL_Renderer *rend, Rect dest, double angle, bool flip_x, bool flip_y) {
+	Rect src = texture.region;
+	SDL_Rect source = {(int)src.x, (int)src.y, (int)src.width, (int)src.height };
+	SDL_Rect destination = { (int)dest.x, (int)dest.y, (int)dest.width, (int)dest.height };
+	SDL_Point center = { (int)texture.origin.x, (int)texture.origin.y };
+	SDL_RendererFlip flip = (flip_x & SDL_FLIP_HORIZONTAL) | (flip_y & SDL_FLIP_VERTICAL);
+	if(SDL_RenderCopyEx(rend, texture.texture, &source, &destination, angle, &center, flip) != 0) {
+		printf("RenderCopyEx call failed! SDL Error: %s\n", SDL_GetError());
+		exit(-1);
+	}
+}
+
 Animation animation_new(int ticks_per_frame) {
 	return (Animation) { al_new(sizeof(Texture)), ticks_per_frame, 0 };
 }
@@ -69,7 +81,12 @@ void animation_next_tick(Animation *anim) {
 		}
 	}
 }
-void animation_draw(Animation *anim, SDL_Renderer *rend, Rect dest) {
-	Texture *current = al_get(anim->frames, anim->current_frame);
+void animation_draw(Animation anim, SDL_Renderer *rend, Rect dest) {
+	Texture *current = al_get(anim.frames, anim.current_frame);
 	texture_draw(*current, rend, dest);
+}
+
+void animation_draw_ex(Animation anim, SDL_Renderer *rend, Rect destination, double angle, bool flip_x, bool flip_y) {
+	Texture *current = al_get(anim.frames, anim.current_frame);
+	texture_draw_ex(*current, rend, destination, angle, flip_x, flip_y);
 }
