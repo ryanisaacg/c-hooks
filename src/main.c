@@ -221,7 +221,7 @@ void draw(ArcadeObject *obj) {
 	EntityData *data = obj->data;
 	Rect rect = {bounds.x, bounds.y, bounds.width, bounds.height};
 	animation_next_tick(&data->current);
-	animation_draw(&data->current, rend, rect);
+	animation_draw(data->current, rend, rect);
 }
 
 void frame(World world, ArcadeObject *obj) {
