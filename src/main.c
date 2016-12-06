@@ -165,7 +165,7 @@ void update_player(World world, ArcadeObject *obj) {
 	if(!jumpPressed) {
 		obj->acceleration.y = player_gravity;
 	}
-	if(supported) {
+	if(!supported) {
 		data->current = player_anim_jump;
 	}
 	//Restore animation progress
