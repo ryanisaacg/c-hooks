@@ -179,6 +179,7 @@ void update_hook(ArcadeObject *obj) {
 }
 
 void update_fish(World world, ArcadeObject *obj) {
+	EntityData *data = obj->data;
 	Rect bounds = shape_bounding_box(obj->bounds);
 	bounds.x += obj->velocity.x;
 	if(!world_region_free(world, shape_rect(bounds), obj)) {
@@ -191,6 +192,13 @@ void update_fish(World world, ArcadeObject *obj) {
 		obj->velocity.y *= -1;
 		obj->velocity.x += rand_num(-fish_variance, fish_variance);
 	}
+	float rotation = vec2_angle(obj->velocity);
+	if(rotation > 90 && rotation < 270) {
+		data->flip_y = true;
+	} else {
+		data->flip_y = false;
+	}
+	shape_set_rotation(&obj->bounds, vec2_angle(obj->velocity));
 }
 
 void update(World world, ArcadeObject *obj) {
