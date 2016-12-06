@@ -309,6 +309,7 @@ int main() {
 					goto cleanup;
 			}
 		}
+		SDL_SetRenderDrawColor(rend, 0x7e, 0xc0, 0xee, 0xFF);
 		SDL_RenderClear(rend);
 		world_update(world, 1, &frame, &collide);
 		SDL_RenderPresent(rend);
@@ -316,7 +317,6 @@ int main() {
 	}
 	cleanup:
 		//Initialize renderer color
-		SDL_SetRenderDrawColor(rend, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_DestroyRenderer(rend);
 		SDL_DestroyWindow(window);
 		IMG_Quit();
