@@ -305,7 +305,8 @@ int main() {
 	group_blacklist_self(player_group);
 	world_add_tilemap(&world, map);
 	new_entity(&world, vec2_new(0, 0), ENTITY_PLAYER);
-	new_entity(&world, vec2_new(100, 100), ENTITY_FISH);
+	for(int i = 0; i < 20; i++)
+		new_entity(&world, vec2_new(32 * i, 100), ENTITY_FISH);
 	while(true) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
