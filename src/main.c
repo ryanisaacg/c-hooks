@@ -321,7 +321,7 @@ int main() {
 		SDL_Delay(10);
 	}
 	cleanup:
-		//Initialize renderer color
+		world_destroy(world);
 		SDL_DestroyRenderer(rend);
 		SDL_DestroyWindow(window);
 		IMG_Quit();
