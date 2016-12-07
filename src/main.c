@@ -19,11 +19,7 @@ typedef struct {
 	EntityType type;
 	int health, iframes;
 	bool flip_x, flip_y;
-	union {
-		struct { ArcadeObject *hook; } player;
-		struct { ArcadeObject *parent, *target; } hook;
-		struct { } fish;
-	} specific;
+	int hook_index, parent_index, target_index;
 } EntityData;
 
 float rand_num(float min, float max) {
@@ -32,12 +28,12 @@ float rand_num(float min, float max) {
 	return value + min;
 }
 
-ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
-	EntityData *data = malloc(sizeof(*data));
-	data->iframes = 0;
-	data->type = type;
-	data->flip_x = false;
-	data->flip_y = false;
+size_t new_entity(World *world, Vector2 position, EntityType type) {
+	EntityData data;
+	data.iframes = 0;
+	data.type = type;
+	data.flip_x = data.flip_y = false;
+	data.hook_index = data.parent_index = data.target_index = -1;
 	Shape bounds;
 	Vector2 acceleration = vec2_new(0, 0), drag = vec2_new(0, 0), max_velocity = vec2_new(-1, -1);
 	Group *group = NULL;
@@ -48,47 +44,46 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 			acceleration.y = player_gravity;
 			drag.x = player_drag_x;
 			max_velocity = vec2_new(player_max_x, player_max_y);
-			data->current = player_anim_idle;
-			data->health = 5;
+			data.current = player_anim_idle;
+			data.health = 5;
 			group = player_group;
 			break;
 		case ENTITY_HOOK:
 			bounds = shape_rect(rect_new(position.x, position.y, hook_width, hook_height));
-			data->current = hook_anim;
-			data->specific.hook.target = NULL;
-			data->specific.hook.parent = NULL;
-			data->health = -1;
+			data.current = hook_anim;
+			data.target_index = -1;
 			group = player_group;
 			break;
 		case ENTITY_FISH:
 			bounds = shape_circ(circ_new(position.x, position.y, fish_radius));
 			max_velocity = vec2_new(fish_max_x, fish_max_y);
-			data->current = fish_anim;
+			data.current = fish_anim;
 			acceleration.y = fish_gravity;
-			data->health = 2;
+			data.health = 2;
 			group = enemy_group;
 			break;
 	}
-	ArcadeObject obj = arcobj_new(bounds, solid, data);
+	ArcadeObject obj = arcobj_new(bounds, solid);
 	obj.acceleration = acceleration;
 	obj.drag = drag;
 	obj.max_velocity = max_velocity;
 	obj.group = group;
-	size_t index = world_add(world, obj);
+	size_t index = world_add(world, obj, &data);
 	ArcadeObject *current = world_get(*world, index);
 	if(type == ENTITY_PLAYER) {
-		ArcadeObject *hook = new_entity(world, position, ENTITY_HOOK);
+		size_t hook_index = new_entity(world, position, ENTITY_HOOK);
+		EntityData *player_data = world_get_data(*world, index);
+		ArcadeObject *hook = world_get(*world, hook_index);
+		EntityData *hook_data = world_get_data(*world, hook_index);
 		hook->alive = false;
 		hook->group = player_group;
-		EntityData *hook_data = hook->data;
-		hook_data->specific.hook.parent = current;
-		data->specific.player.hook = hook;
+		hook_data->parent_index = index;
+		player_data->hook_index = hook_index;
 	}
-	return current;
+	return index;
 }
 
-void hurt(ArcadeObject *object, int damage, int iframes) {
-	EntityData *data = object->data;
+void hurt(ArcadeObject *object, EntityData *data, int damage, int iframes) {
 	if(data->health > 0 && data->iframes == 0) {
 		data->health -= damage;
 		data->iframes = iframes;
@@ -98,10 +93,10 @@ void hurt(ArcadeObject *object, int damage, int iframes) {
 	}
 }
 
-void update_player(World world, ArcadeObject *obj) {
-	EntityData *data = obj->data;
-	ArcadeObject *hook = data->specific.player.hook;
-	EntityData *hook_data = hook->data;
+void update_player(World world, ArcadeObject *obj, EntityData *data) {
+	int hook_index = data->hook_index;
+	ArcadeObject *hook = hook_index == -1 ? NULL : world_get(world, hook_index);
+	EntityData *hook_data = hook_index == -1 ? NULL : world_get_data(world, hook_index);
 	const Uint8 *keys = SDL_GetKeyboardState(NULL);
 	bool leftPressed = keys[SDL_SCANCODE_A];
 	bool rightPressed = keys[SDL_SCANCODE_D];
@@ -132,7 +127,7 @@ void update_player(World world, ArcadeObject *obj) {
 			hook->velocity = vec2_with_len(vec2_sub(vec2_new(mouse_x, mouse_y), shape_get_position(obj->bounds)), hook_speed);
 			shape_set_rotation(&hook->bounds, vec2_angle(hook->velocity));
 		}
-	} else if(hook_data->specific.hook.target == NULL 
+	} else if(hook_data->target_index == -1
 			&& world_region_free(world, shape_rect(shape_bounding_box(hook->bounds)), hook)) {
 		Rect bounds = shape_bounding_box(hook->bounds);
 		bounds.x += hook->velocity.x;
@@ -142,11 +137,12 @@ void update_player(World world, ArcadeObject *obj) {
 		}
 	} else {
 		Vector2 diff = vec2_sub(shape_get_position(hook->bounds), shape_get_position(obj->bounds));
-		if(vec2_len(diff) <= 90) {
-			if(hook_data->specific.hook.target != NULL) {
-				shape_set_position(&hook_data->specific.hook.target->bounds, shape_get_position(hook->bounds));
+		if(vec2_len(diff) <= 60) {
+			ArcadeObject *target = hook_data->target_index == -1 ? NULL : world_get(world, hook_data->target_index);
+			if(target != NULL) {
+				shape_set_position(&target->bounds, shape_get_position(hook->bounds));
 			}
-			hook_data->specific.hook.target = NULL;
+			hook_data->target_index = -1;
 			hook->alive = false;
 			obj->max_velocity = vec2_new(player_max_x, player_max_y);
 		} else {
@@ -172,17 +168,15 @@ void update_player(World world, ArcadeObject *obj) {
 	data->current.current_ticks = progress;
 }
 
-void update_hook(ArcadeObject *obj) {
-	EntityData *data = obj->data;
-	ArcadeObject *target = data->specific.hook.target;
-	if(target != NULL) {
+void update_hook(World world, ArcadeObject *obj, EntityData *data) {
+	if(data->target_index != -1) {
+		ArcadeObject *target = world_get(world, data->target_index);
 		shape_set_position(&target->bounds, shape_get_position(obj->bounds));
 		target->velocity = obj->velocity;
 	}
 }
 
-void update_fish(World world, ArcadeObject *obj) {
-	EntityData *data = obj->data;
+void update_fish(World world, ArcadeObject *obj, EntityData *data) {
 	Rect bounds = shape_bounding_box(obj->bounds);
 	bounds.x += obj->velocity.x;
 	if(!world_region_free(world, shape_rect(bounds), obj)) {
@@ -204,45 +198,43 @@ void update_fish(World world, ArcadeObject *obj) {
 	shape_set_rotation(&obj->bounds, vec2_angle(obj->velocity));
 }
 
-void update(World world, ArcadeObject *obj) {
-	EntityData *data = obj->data;
+void update(World world, ArcadeObject *obj, EntityData *data) {
 	if(data->iframes > 0) {
 		data->iframes--;
 	}
 	switch(data->type) {
 		case ENTITY_PLAYER:
-			update_player(world, obj);
+			update_player(world, obj, data);
 			break;
 		case ENTITY_HOOK:
-			update_hook(obj);
+			update_hook(world, obj, data);
 			break;
 		case ENTITY_FISH:
-			update_fish(world, obj);
+			update_fish(world, obj, data);
 			break;
 	}
 }
 
-void collide(ArcadeObject *a, ArcadeObject *b) {
-	EntityData *aData = a->data;
-	EntityData *bData = b->data;
+void collide(ArcadeObject *a, void *a_data_ptr, ArcadeObject *b, void *b_data_ptr) {
+	EntityData *aData = a_data_ptr;
+	EntityData *bData = b_data_ptr;
 	if(aData->type == ENTITY_PLAYER) {
 		EntityData *hookData = aData->specific.player.hook->data;
 		ArcadeObject *hookTarget = hookData->specific.hook.target;
 		if(hookTarget == NULL && bData->iframes == 0) {
-			hurt(a, 1, 60);
+			hurt(a, aData, 1, 60);
 		} else {
-			hurt(b, 1, 30);
+			hurt(b, bData, 1, 30);
 		}
-	} else if(aData->type == ENTITY_HOOK && aData->specific.hook.target == NULL) {
+	} else if(aData->type == ENTITY_HOOK && aData->target_index == -1) {
 		aData->specific.hook.target = b;
 		shape_set_position(&b->bounds, shape_get_position(a->bounds));
 		a->velocity = vec2_new(0, 0);
-		hurt(b, 1, 0);
+		hurt(b, bData, 1, 0);
 	}
 }
 
-void draw(ArcadeObject *obj) {
-	EntityData *data = obj->data;
+void draw(ArcadeObject *obj, EntityData *data) {
 	animation_next_tick(&data->current);	
 	Vector2 position = shape_get_position(obj->bounds);
 	Texture *current_texture = animation_get_current_frame(data->current);
@@ -254,9 +246,9 @@ void draw(ArcadeObject *obj) {
 	animation_draw_ex(data->current, rend, bounds, rotation, data->flip_x, data->flip_y, alpha);
 }
 
-void frame(World world, ArcadeObject *obj) {
-	update(world, obj);
-	draw(obj);
+void frame(World world, ArcadeObject *obj, void *ptr) {
+	update(world, obj, ptr);
+	draw(obj, ptr);
 }
 
 #undef main
