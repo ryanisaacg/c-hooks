@@ -215,19 +215,19 @@ void update(World world, ArcadeObject *obj, EntityData *data) {
 	}
 }
 
-void collide(ArcadeObject *a, void *a_data_ptr, ArcadeObject *b, void *b_data_ptr) {
+void collide(World world, ArcadeObject *a, void *a_data_ptr, ArcadeObject *b, void *b_data_ptr) {
 	EntityData *aData = a_data_ptr;
 	EntityData *bData = b_data_ptr;
 	if(aData->type == ENTITY_PLAYER) {
-		EntityData *hookData = aData->specific.player.hook->data;
-		ArcadeObject *hookTarget = hookData->specific.hook.target;
+		EntityData *hookData = world_get_data(world, aData->hook_index);
+		ArcadeObject *hookTarget = hookData->target_index == -1 ? NULL : world_get(world, hookData->target_index);
 		if(hookTarget == NULL && bData->iframes == 0) {
 			hurt(a, aData, 1, 60);
 		} else {
 			hurt(b, bData, 1, 30);
 		}
 	} else if(aData->type == ENTITY_HOOK && aData->target_index == -1) {
-		aData->specific.hook.target = b;
+		aData->target_index = b->index;
 		shape_set_position(&b->bounds, shape_get_position(a->bounds));
 		a->velocity = vec2_new(0, 0);
 		hurt(b, bData, 1, 0);
@@ -289,7 +289,7 @@ int main() {
 	hook_anim 			= animation_from_texture(texture_new(load_texture(rend, "../img/hook.png")));
 	fish_anim 			= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
 	//Create the simulation world
-	World world = world_new(640, 480, 96);
+	World world = world_new(640, 480, 96, sizeof(EntityData));
 	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
 	player_group = world_add_group(&world, group_new());
 	enemy_group = world_add_group(&world, group_new());
