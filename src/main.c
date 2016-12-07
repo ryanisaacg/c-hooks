@@ -81,9 +81,8 @@ ArcadeObject *new_entity(World *world, Vector2 position, EntityType type) {
 		hook->alive = false;
 		hook->group = player_group;
 		EntityData *hook_data = hook->data;
-		data->specific.hook.parent = current;
-		EntityData *player_data = current->data;
-		player_data->specific.player.hook = hook;
+		hook_data->specific.hook.parent = current;
+		data->specific.player.hook = hook;
 	}
 	return current;
 }
@@ -305,8 +304,9 @@ int main() {
 	group_blacklist_self(player_group);
 	world_add_tilemap(&world, map);
 	new_entity(&world, vec2_new(0, 0), ENTITY_PLAYER);
-	for(int i = 0; i < 20; i++)
-		new_entity(&world, vec2_new(32 * i, 100), ENTITY_FISH);
+	for(int i = 0; i < 50; i++) {
+		new_entity(&world, vec2_new(i + 20, 100), ENTITY_FISH);
+	}
 	while(true) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
