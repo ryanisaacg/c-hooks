@@ -27,5 +27,8 @@
 		"variance" : 10,
 		"max-x" : 5,
 		"max-y" : 5
+	},
+	"puffer" : {
+		"radius" : 32
 	}
 }
