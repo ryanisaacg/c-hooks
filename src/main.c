@@ -73,6 +73,11 @@ void draw(ArcadeObject *obj, EntityData *data) {
 	float rotation = shape_get_rotation(obj->bounds);
 	Uint8 alpha = (data->iframes > 0) ? 0x88 : 0xff;
 	animation_draw_ex(data->current, rend, bounds, rotation, data->flip_x, data->flip_y, alpha);
+	if(data->type == ENTITY_PLAYER) {
+		for(int i = 0; i < data->health; i++) {
+			animation_draw_ex(hook_anim, rend, rect_new(32 + i * 48, 32, 32, 18), 45, false, true, 0xff);
+		}
+	}
 }
 
 void frame(World world, ArcadeObject *obj, void *ptr) {

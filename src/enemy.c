@@ -25,7 +25,7 @@ size_t spawn_fish(World *world, Vector2 position) {
 }
 
 void update_fish(World world, ArcadeObject *obj, EntityData *data) {
-	obj->velocity.x *= rand_num(0.9, 1.2);
+	obj->velocity.x *= rand_num(0.9, 1.5);
 	float rotation = vec2_angle(obj->velocity);
 	if(rotation > 90 && rotation < 270) {
 		data->flip_y = true;
