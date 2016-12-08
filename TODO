@@ -1,0 +1,34 @@
+Unpullable terrain blocks
+Pullable terrain blocks
+Puffer fish enemies
+The Lost Girls (use slingshots, not killed but just knocked out)
+Freeze frame on impact
+Fish healing when killed
+Fix the running animation
+Swiss Fish bossfight
+Bufferfish bossfight
+Petra Pots bossfight
+Buble particles for hooked objects
+Coral spikes
+Undersea vents
+Loading levels from TMX files
+Tutorial room
+Fish area:
+	- Platforming challenge (traversal)
+	- Fish combat arena
+	- Hazardous platforming challenge (coral spikes)
+	- Enemy-filled platforming challenge (coral + fish)
+	- Swiss Fish
+Puffer area:
+	- Platforming challenge (pulling objects)
+	- Puffer combat area (pull objects to kill)
+	- Hazardous platforming challenge (undersea vents + coral)
+	- Enemy-filled platforming challenge (coral + fish + vents + puffer)
+	- Buffer Fish
+AlwaysPlace:
+	- Platforming challenge (Destructable terrain)
+	- Lost Girls combat area (destroy perches to KO)
+	- Hazardous platforming challenge (Crumbling terrain + coral)
+	- Enemy-filled platforming challenge (LGs + crumbling terrain + coral)
+	- Petra Pots land fight (crumble down to ocean)
+	- Petra pots ocean fight (trap in cage)
