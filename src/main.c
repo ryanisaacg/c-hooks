@@ -9,18 +9,13 @@
 
 #include "config.h"
 #include "data.h"
+#include "enemy.h"
 #include "player.h"
 #include "textures.h"
 
 Animation player_anim_idle, player_anim_walk, player_anim_jump, hook_anim, fish_anim;
 SDL_Renderer *rend;
 Group *player_group, *enemy_group;
-
-float rand_num(float min, float max) {
-	float diff = max - min;
-	float value = rand() * diff / RAND_MAX;
-	return value + min;
-}
 
 size_t new_entity(World *world, Vector2 position, EntityType type) {
 	EntityData data;
@@ -90,28 +85,6 @@ void hurt(ArcadeObject *object, EntityData *data, int damage, int iframes) {
 			object->alive = false;
 		}
 	}
-}
-
-void update_fish(World world, ArcadeObject *obj, EntityData *data) {
-	/*Rect bounds = shape_bounding_box(obj->bounds);
-	bounds.x += obj->velocity.x;
-	if(!world_region_free(world, shape_rect(bounds), obj)) {
-		obj->velocity.x *= -1;
-		obj->velocity.x += rand_num(-fish_variance, fish_variance);
-		bounds.x += 2 * obj->velocity.x;
-	}
-	bounds.y += obj->velocity.y;
-	if(!world_region_free(world, shape_rect(bounds), obj)) {
-		obj->velocity.y *= -1.5;
-		obj->velocity.x += rand_num(-fish_variance, fish_variance);
-	}*/
-	float rotation = vec2_angle(obj->velocity);
-	if(rotation > 90 && rotation < 270) {
-		data->flip_y = true;
-	} else {
-		data->flip_y = false;
-	}
-	shape_set_rotation(&obj->bounds, vec2_angle(obj->velocity));
 }
 
 void update(World world, ArcadeObject *obj, EntityData *data) {
@@ -213,7 +186,7 @@ int main() {
 	world_add_tilemap(&world, map);
 	spawn_player(&world, vec2_new(0, 0));
 	for(int i = 0; i < 10; i++) {
-		new_entity(&world, vec2_new(i + 20, 100), ENTITY_FISH);
+		spawn_fish(&world, vec2_new(i + 20, 100));
 	}
 	while(true) {
 		SDL_Event event;
