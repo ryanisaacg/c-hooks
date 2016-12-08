@@ -17,66 +17,6 @@ Animation player_anim_idle, player_anim_walk, player_anim_jump, hook_anim, fish_
 SDL_Renderer *rend;
 Group *player_group, *enemy_group;
 
-size_t new_entity(World *world, Vector2 position, EntityType type) {
-	EntityData data;
-	data.iframes = 0;
-	data.type = type;
-	data.flip_x = data.flip_y = false;
-	data.hook_index = data.parent_index = data.target_index = -1;
-	Shape bounds;
-	Vector2 acceleration = vec2_new(0, 0), drag = vec2_new(0, 0), max_velocity = vec2_new(-1, -1);
-	Group *group = NULL;
-	bool solid = false, bounce = false;
-	switch(type) {
-		case ENTITY_PLAYER:
-			bounds = shape_rect(rect_new(position.x, position.y, player_width, player_height));
-			acceleration.y = player_gravity;
-			drag.x = player_drag_x;
-			max_velocity = vec2_new(player_max_x, player_max_y);
-			data.current = player_anim_idle;
-			data.health = 5;
-			group = player_group;
-			break;
-		case ENTITY_HOOK:
-			bounds = shape_rect(rect_new(position.x, position.y, hook_width, hook_height));
-			data.current = hook_anim;
-			data.target_index = -1;
-			group = player_group;
-			break;
-		case ENTITY_FISH:
-			bounds = shape_circ(circ_new(position.x, position.y, fish_radius));
-			max_velocity = vec2_new(fish_max_x, fish_max_y);
-			data.current = fish_anim;
-			acceleration.y = fish_gravity;
-			data.health = 2;
-			group = enemy_group;
-			bounce = true;
-			break;
-		case ENTITY_PUFFER:
-			bounds = shape_circ(circ_new(position.x, position.y, puffer_radius));
-
-	}
-	ArcadeObject obj = arcobj_new(bounds, solid);
-	obj.acceleration = acceleration;
-	obj.drag = drag;
-	obj.max_velocity = max_velocity;
-	obj.group = group;
-	obj.bounce = bounce;
-	size_t index = world_add(world, obj, &data);
-	ArcadeObject *current = world_get(*world, index);
-	if(type == ENTITY_PLAYER) {
-		size_t hook_index = new_entity(world, position, ENTITY_HOOK);
-		EntityData *player_data = world_get_data(*world, index);
-		ArcadeObject *hook = world_get(*world, hook_index);
-		EntityData *hook_data = world_get_data(*world, hook_index);
-		hook->alive = false;
-		hook->group = player_group;
-		hook_data->parent_index = index;
-		player_data->hook_index = hook_index;
-	}
-	return index;
-}
-
 void hurt(ArcadeObject *object, EntityData *data, int damage, int iframes) {
 	if(data->health > 0 && data->iframes == 0) {
 		data->health -= damage;
