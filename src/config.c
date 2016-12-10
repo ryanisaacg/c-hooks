@@ -8,6 +8,7 @@ void config_load(char *filename) {
 	JSON_Object *hook_config 	= json_object_get_object(config, "hook");
 	JSON_Object *fish_config	= json_object_get_object(config, "fish");
 	JSON_Object *puffer_config	= json_object_get_object(config, "puffer");
+	JSON_Object *box_config		= json_object_get_object(config, "block");
 	//Global values
 	player_walk 				= json_object_get_number(player_config, "walk"); 
 	player_jump 				= json_object_get_number(player_config, "jump");
@@ -33,4 +34,7 @@ void config_load(char *filename) {
 	fish_max_x					= json_object_get_number(fish_config, "max-x");
 	fish_max_y					= json_object_get_number(fish_config, "max-y");
 	puffer_radius				= json_object_get_number(puffer_config, "radius");
+	box_width					= json_object_get_number(box_config, "width");
+	box_height					= json_object_get_number(box_config, "height");
+	box_gravity					= json_object_get_number(box_config, "gravity");
 }

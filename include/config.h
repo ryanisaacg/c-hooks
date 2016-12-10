@@ -5,5 +5,6 @@ float player_jump, player_walk, player_gravity, player_gravity_hold, player_widt
 float hook_width, hook_height, hook_speed, hook_reel_speed;
 float fish_radius, fish_gravity, fish_leap, fish_variance, fish_max_x, fish_max_y;
 float puffer_radius;
+float box_width, box_height, box_gravity;
 int player_idle_animation_speed, player_walk_animation_speed;
 void config_load(char *filename);

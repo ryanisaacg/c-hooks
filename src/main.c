@@ -10,12 +10,13 @@
 #include "config.h"
 #include "data.h"
 #include "enemy.h"
+#include "objects.h"
 #include "player.h"
 #include "textures.h"
 
-Animation player_anim_idle, player_anim_walk, player_anim_jump, hook_anim, fish_anim;
+Animation player_anim_idle, player_anim_walk, player_anim_jump, hook_anim, fish_anim, block_anim;
 SDL_Renderer *rend;
-Group *player_group, *enemy_group;
+Group *player_group, *enemy_group, *object_group;
 
 void hurt(ArcadeObject *object, EntityData *data, int damage, int iframes) {
 	if(data->health > 0 && data->iframes == 0) {
@@ -122,19 +123,22 @@ int main() {
 	player_anim_jump 	= animation_from_texture(texture_new(load_texture(rend, "../img/player_fall.png")));
 	hook_anim 			= animation_from_texture(texture_new(load_texture(rend, "../img/hook.png")));
 	fish_anim 			= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
+	block_anim			= animation_from_texture(texture_new(load_texture(rend, "../img/crate.png")));
 	//Create the simulation world
 	World world = world_new(640, 480, 96, sizeof(EntityData));
-	Texture tex = texture_new(load_texture(rend, "../img/floor.png"));
+	Texture tex = texture_new(load_texture(rend, "../img/rock.png"));
 	SpatialMap map = sm_new(sizeof(Texture), 640, 480, 32, 32);
 	sm_set(&map, &tex, 300, 300);
 	player_group = world_add_group(&world, group_new());
 	enemy_group = world_add_group(&world, group_new());
+	object_group = world_add_group(&world, group_new());
 	group_blacklist_self(player_group);
 	world_add_map(&world, map);
 	spawn_player(&world, vec2_new(0, 0));
 	for(int i = 0; i < 10; i++) {
 		spawn_fish(&world, vec2_new(i + 20, 100));
 	}
+	spawn_block(&world, vec2_new(400, 0));
 	while(true) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {

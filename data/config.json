@@ -28,6 +28,11 @@
 		"max-x" : 5,
 		"max-y" : 5
 	},
+	"block" : {
+		"width" : 32,
+		"height" : 32,
+		"gravity" : 0.1
+	},
 	"puffer" : {
 		"radius" : 32
 	}

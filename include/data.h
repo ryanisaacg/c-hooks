@@ -2,7 +2,7 @@
 
 #include "textures.h"
 
-typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH, ENTITY_PUFFER} EntityType;
+typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH, ENTITY_PUFFER, ENTITY_BLOCK} EntityType;
 
 typedef struct {
 	Animation current;
