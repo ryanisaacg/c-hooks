@@ -124,18 +124,13 @@ int main() {
 	fish_anim 			= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
 	//Create the simulation world
 	World world = world_new(640, 480, 96, sizeof(EntityData));
-	TileMap map = tl_new(sizeof(Texture), 640, 480, 32);
 	Texture tex = texture_new(load_texture(rend, "../img/floor.png"));
-	for(int x = 0; x < map.width; x++) {
-		for(int y = 0; y < map.height; y++) {
-			tl_remove(map, x, y);
-		}
-	}
-	tl_set(map, &tex, 300, 100);
+	SpatialMap map = sm_new(sizeof(Texture), 640, 480, 32, 32);
+	sm_set(map, &tex, 300, 300);
 	player_group = world_add_group(&world, group_new());
 	enemy_group = world_add_group(&world, group_new());
 	group_blacklist_self(player_group);
-	world_add_tilemap(&world, map);
+	world_add_map(&world, map);
 	spawn_player(&world, vec2_new(0, 0));
 	for(int i = 0; i < 10; i++) {
 		spawn_fish(&world, vec2_new(i + 20, 100));
@@ -152,8 +147,8 @@ int main() {
 		SDL_RenderClear(rend);
 		for(int x = 0; x < map.width; x++) {
 			for(int y = 0; y < map.height; y++) {
-				if(!tl_free(map, x, y)) {
-					Texture *tex = tl_get(map, x, y);
+				if(sm_has(map, x, y)) {
+					Texture *tex = sm_get(map, x, y);
 					printf("%p\n", tex->texture);
 					if(tex->texture != NULL) {
 						texture_draw(*tex, rend, rect_new(x, y, tex->region.width, tex->region.height));
