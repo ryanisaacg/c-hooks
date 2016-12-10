@@ -145,8 +145,8 @@ int main() {
 		}
 		SDL_SetRenderDrawColor(rend, 0x7e, 0xc0, 0xee, 0xFF);
 		SDL_RenderClear(rend);
-		for(int x = 0; x < map.width; x++) {
-			for(int y = 0; y < map.height; y++) {
+		for(int x = 0; x < map.width; x += map.tile_width) {
+			for(int y = 0; y < map.height; y += map.tile_height) {
 				if(sm_has(map, x, y)) {
 					Texture *tex = sm_get(map, x, y);
 					if(tex->texture != NULL) {
