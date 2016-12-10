@@ -206,11 +206,11 @@ int main() {
 	fish_anim 			= animation_from_texture(texture_new(load_texture(rend, "../img/fish.png")));
 	//Create the simulation world
 	World world = world_new(640, 480, 96, sizeof(EntityData));
-	TileMap map = tl_new(sizeof(SDL_Texture*), 640, 480, 32);
+	SpatialMap map = sm_new(sizeof(SDL_Texture*), 640, 480, 32, 32);
 	player_group = world_add_group(&world, group_new());
 	enemy_group = world_add_group(&world, group_new());
 	group_blacklist_self(player_group);
-	world_add_tilemap(&world, map);
+	world_add_map(&world, map);
 	spawn_player(&world, vec2_new(0, 0));
 	for(int i = 0; i < 10; i++) {
 		new_entity(&world, vec2_new(i + 20, 100), ENTITY_FISH);
