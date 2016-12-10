@@ -126,7 +126,7 @@ int main() {
 	World world = world_new(640, 480, 96, sizeof(EntityData));
 	Texture tex = texture_new(load_texture(rend, "../img/floor.png"));
 	SpatialMap map = sm_new(sizeof(Texture), 640, 480, 32, 32);
-	sm_set(map, &tex, 300, 300);
+	sm_set(&map, &tex, 300, 300);
 	player_group = world_add_group(&world, group_new());
 	enemy_group = world_add_group(&world, group_new());
 	group_blacklist_self(player_group);
@@ -149,7 +149,6 @@ int main() {
 			for(int y = 0; y < map.height; y++) {
 				if(sm_has(map, x, y)) {
 					Texture *tex = sm_get(map, x, y);
-					printf("%p\n", tex->texture);
 					if(tex->texture != NULL) {
 						texture_draw(*tex, rend, rect_new(x, y, tex->region.width, tex->region.height));
 					}
