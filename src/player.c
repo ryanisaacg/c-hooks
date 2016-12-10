@@ -14,18 +14,18 @@ size_t spawn_player(World *world, Vector2 position) {
 	player_obj.acceleration.y = player_gravity;
 	player_obj.drag.x = player_drag_x;
 	player_obj.group = player_group;
-	player.max_velocity = vec2_new(player_max_x, player_max_y);
+	player_obj.max_velocity = vec2_new(player_max_x, player_max_y);
 	data.current = player_anim_idle;
-	ArcadeObject hook_obj = arcobj_new(shape_rect(rect_new(position.x, position.y, hook_width, hook_height)));
+	ArcadeObject hook_obj = arcobj_new(shape_rect(rect_new(position.x, position.y, hook_width, hook_height)), false);
 	hook_data.current = hook_anim;
-	obj_obj.group = group;
+	hook_obj.group = player_group;
 	size_t player_index = world_add(world, player_obj, &data);
 	size_t hook_index = world_add(world, hook_obj, &hook_data);
 	World w = *world;
 	EntityData *player_data_ptr = world_get_data(w, player_index);
 	EntityData *hook_data_ptr = world_get_data(w, hook_index);
-	player_data_ptr->hook = hook_index;
-	hook_data_ptr->parent = player_index;
+	player_data_ptr->hook_index = hook_index;
+	hook_data_ptr->parent_index = player_index;
 	return player_index;
 }
 void update_player(World world, ArcadeObject *obj, EntityData *data) {
