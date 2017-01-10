@@ -1,6 +1,6 @@
 [submodule "arcade-physics"]
 	path = arcade-physics
-	url = https://github.com/ryanisaacg/arcade-physics
+	url = https://github.com/ryanisaacg/arcade-engine
 [submodule "json"]
 	path = json
 	url = https://github.com/ryanisaacg/json
