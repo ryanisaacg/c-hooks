@@ -1,5 +1,5 @@
 [submodule "arcade-physics"]
-	path = arcade-physics
+	path = arcade-engine
 	url = https://github.com/ryanisaacg/arcade-engine
 [submodule "json"]
 	path = json
