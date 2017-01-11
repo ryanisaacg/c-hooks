@@ -1,2 +1,2 @@
-let g:syntastic_c_include_dirs=['arcade-physics/include', 'arcade-physics/data-structures/include', 'json', $SDL2_INCLUDE]
+let g:syntastic_c_include_dirs=['arcade-engine/include', 'arcade-engine/data-structures/include', 'json', 'arcade-engine/sdl2/include', 'arcade-engine/sdl2_image/include']
 copy and :@"

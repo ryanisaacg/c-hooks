@@ -2,22 +2,22 @@
 
 #include "config.h"
 #include "data.h"
-#include "textures.h"
 
-extern Animation player_anim_idle, player_anim_walk, player_anim_jump, hook_anim;
+extern Animation player_anim_idle, player_anim_walk, player_anim_jump;
+extern TextureRegion hook_tex;
 extern Group *player_group;
 
 size_t spawn_player(World *world, Vector2 position) {
 	EntityData data = data_new(ENTITY_PLAYER, 5);
 	EntityData hook_data = data_new(ENTITY_HOOK, -1);
-	ArcadeObject player_obj = arcobj_new(shape_rect(rect_new(position.x, position.y, player_width, player_height)), false);
+	Rect region = rect_new(position.x, position.y, player_width, player_height);
+	ArcadeObject player_obj = arcobj_new(shape_rect(region), false, spr_new_animated(player_anim_idle, region));
 	player_obj.acceleration.y = player_gravity;
 	player_obj.drag.x = player_drag_x;
 	player_obj.group = player_group;
 	player_obj.max_velocity = vec2_new(player_max_x, player_max_y);
-	data.current = player_anim_idle;
-	ArcadeObject hook_obj = arcobj_new(shape_rect(rect_new(position.x, position.y, hook_width, hook_height)), false);
-	hook_data.current = hook_anim;
+	Rect hook_region = rect_new(position.x, position.y, hook_width, hook_height);
+	ArcadeObject hook_obj = arcobj_new(shape_rect(hook_region), false, spr_new_static(hook_tex, region));
 	hook_obj.group = player_group;
 	hook_obj.alive = false;
 	size_t player_index = world_add(world, player_obj, &data);
@@ -40,18 +40,18 @@ void update_player(World world, ArcadeObject *obj, EntityData *data) {
 	int mouse_x, mouse_y;
 	Uint8 mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
 	//store animation progress so animations play
-	int frame = data->current.current_frame;
-	int progress = data->current.current_ticks;
-	data->current = player_anim_idle;
+	int frame = obj->sprite.src.anim.current_frame;
+	int progress = obj->sprite.src.anim.current_steps;
+	obj->sprite.src.anim = player_anim_idle;
 	if(leftPressed ^ rightPressed) {
 		if(leftPressed) {
 			obj->acceleration.x = -player_walk;
-			data->flip_x = true;
+			obj->sprite.flip_x = true;
 		} else  {
 			obj->acceleration.x = player_walk;
-			data->flip_x = false;
+			obj->sprite.flip_x = false;
 		}
-		data->current = player_anim_walk;
+		obj->sprite.src.anim = player_anim_walk;
 	} else {
 		obj->acceleration.x = 0;
 	}
@@ -97,11 +97,11 @@ void update_player(World world, ArcadeObject *obj, EntityData *data) {
 		obj->acceleration.y = player_gravity;
 	}
 	if(!supported) {
-		data->current = player_anim_jump;
+		obj->sprite.src.anim = player_anim_jump;
 	}
 	//Restore animation progress
-	data->current.current_frame = frame % data->current.frames.length;
-	data->current.current_ticks = progress;
+	obj->sprite.src.anim.current_frame = frame % obj->sprite.src.anim.frames.length;
+	obj->sprite.src.anim.current_steps = progress;
 }
 void update_hook(World world, ArcadeObject *obj, EntityData *data) {
 	if(data->target_index != -1) {

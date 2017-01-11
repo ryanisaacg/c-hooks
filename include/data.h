@@ -1,14 +1,10 @@
 #pragma once
 
-#include "textures.h"
-
 typedef enum EntityType {ENTITY_PLAYER, ENTITY_HOOK, ENTITY_FISH, ENTITY_PUFFER, ENTITY_BLOCK} EntityType;
 
 typedef struct {
-	Animation current;
 	EntityType type;
 	int health, iframes;
-	bool flip_x, flip_y;
 	int hook_index, parent_index, target_index;
 } EntityData;
 
