@@ -103,7 +103,7 @@ int main() {
 		spawn_fish(&world, vec2_new(i + 20, 100));
 	}
 	spawn_block(&world, vec2_new(400, 0));
-	while(true) {
+	while(window_should_contine(window)) {
 		window_events(&window);
 		world_update(world, 1, &frame, &collide);
 		window_start_draw(&window, 0, 0, 0xff);
