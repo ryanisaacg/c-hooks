@@ -33,9 +33,7 @@ void update(World world, ArcadeObject *obj, EntityData *data) {
 	if(data->iframes > 0) {
 		data->iframes--;
 	}
-	Vector2 position = shape_get_position(obj->bounds);
-	obj->sprite.bounds.x = position.x;
-	obj->sprite.bounds.y = position.y;
+	obj->sprite.position = shape_get_position(obj->bounds);
 	switch(data->type) {
 		case ENTITY_PLAYER:
 			update_player(world, obj, data);
