@@ -15,6 +15,7 @@ static float rand_num(float min, float max) {
 size_t spawn_fish(World *world, Vector2 position) {
 	Shape bounds = shape_circ(circ_new(position.x, position.y, fish_radius));
 	ArcadeObject fish_obj = arcobj_new(bounds, false, spr_new_animated(fish_anim, shape_bounding_box(bounds)));
+	spr_center_origin(&(fish_obj.sprite));
 	EntityData fish_data = data_new(ENTITY_FISH, 2);
 	fish_obj.max_velocity = vec2_new(fish_max_x, fish_max_y);
 	fish_obj.velocity.x = rand_num(-fish_leap, fish_leap);
